@@ -2,17 +2,25 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Vosk Browser Test (URL指定版)</title>
-    <!-- スタイルは省略 -->
+    <title>Vosk Browser Test (URL指定・修正版)</title>
+    <style>
+        /* スタイルは変更なし */
+        body { font-family: sans-serif; padding: 20px; }
+        #controls, #status, #result { margin-bottom: 15px; }
+        #model_url { width: 100%; max-width: 600px; padding: 5px; }
+        button { padding: 10px 15px; font-size: 16px; }
+        textarea { width: 100%; height: 150px; font-size: 14px; }
+    </style>
 </head>
 <body>
-
-    <h1>Vosk.js ローカル音声認識テスト (URL指定版)</h1>
-
+    <h1>Vosk.js ローカル音声認識テスト (URL指定・修正版)</h1>
     <div id="controls">
         <label for="model_url">モデルのURL:</label>
-        <!-- ここに、GitHub PagesでホスティングしたモデルのURLを指定します -->
-        <input type="text" id="model_url" value="https://your-username.github.io/my-vosk-test/vosk-model-small-ja-0.22" style="width: 600px;">
+        <!-- 
+          【重要】URLの末尾をフォルダ名で終わらせず、
+          その中にあるファイル `model.conf` まで指定します。
+        -->
+        <input type="text" id="model_url" value="https://nyantorusabu.github.io/NekoExtensions/vosk-model-small-ja-0.22/model.conf">
         <p>
             <small>※上記のURLを、ご自身でホスティングしたものに書き換えてください。</small>
         </p>
@@ -26,11 +34,9 @@
     <h3>最終認識結果:</h3>
     <textarea id="final_result" readonly></textarea>
 
-    <!-- vosk-browserライブラリ -->
     <script type="application/javascript" src="https://cdn.jsdelivr.net/npm/vosk-browser@0.0.3/dist/vosk.js"></script>
-    
-    <!-- JavaScriptコード（変更なし） -->
     <script>
+        // JavaScript部分は変更ありません
         const modelUrlInput = document.getElementById('model_url');
         const startBtn = document.getElementById('startBtn');
         const stopBtn = document.getElementById('stopBtn');
@@ -45,7 +51,6 @@
         }
 
         startBtn.addEventListener('click', async () => {
-            // ... (これ以降のJavaScriptコードは以前のものと全く同じです) ...
             startBtn.disabled = true;
             stopBtn.disabled = false;
             finalResultTextarea.value = '';
@@ -86,7 +91,7 @@
                     }
                 };
                 source = audioContext.createMediaStreamSource(mediaStream);
-                source.connect(recognizerNode);
+                source.connect( recognizerNode );
                 recognizerNode.connect(audioContext.destination);
                 updateStatus('認識中です... 話してください。');
             } catch (error) {
@@ -112,6 +117,5 @@
             stopBtn.disabled = true;
         }
     </script>
-
 </body>
 </html>
