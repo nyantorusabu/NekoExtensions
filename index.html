@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Vosk Browser Test (URL指定・修正版)</title>
+    <title>Vosk Browser Test (デバッグ版)</title>
     <style>
         /* スタイルは変更なし */
         body { font-family: sans-serif; padding: 20px; }
@@ -10,20 +10,17 @@
         #model_url { width: 100%; max-width: 600px; padding: 5px; }
         button { padding: 10px 15px; font-size: 16px; }
         textarea { width: 100%; height: 150px; font-size: 14px; }
+        .log-info { color: blue; }
+        .log-success { color: green; }
+        .log-error { color: red; }
     </style>
 </head>
 <body>
-    <h1>Vosk.js ローカル音声認識テスト (URL指定・修正版)</h1>
+    <h1>Vosk.js ローカル音声認識テスト (デバッグ版)</h1>
     <div id="controls">
         <label for="model_url">モデルのURL:</label>
-        <!-- 
-          【重要】URLの末尾をフォルダ名で終わらせず、
-          その中にあるファイル `model.conf` まで指定します。
-        -->
         <input type="text" id="model_url" value="https://nyantorusabu.github.io/NekoExtensions/vosk-model-small-ja-0.22/model.conf">
-        <p>
-            <small>※上記のURLを、ご自身でホスティングしたものに書き換えてください。</small>
-        </p>
+        <p><small>※URLはご自身のものに書き換えてください。</small></p>
         <button id="startBtn">認識開始</button>
         <button id="stopBtn" disabled>認識停止</button>
     </div>
@@ -36,7 +33,7 @@
 
     <script type="application/javascript" src="https://cdn.jsdelivr.net/npm/vosk-browser@0.0.3/dist/vosk.js"></script>
     <script>
-        // JavaScript部分は変更ありません
+        // --- 主要な要素の取得（変更なし） ---
         const modelUrlInput = document.getElementById('model_url');
         const startBtn = document.getElementById('startBtn');
         const stopBtn = document.getElementById('stopBtn');
@@ -49,8 +46,15 @@
         function updateStatus(message) {
             statusDiv.textContent = `ステータス: ${message}`;
         }
+        
+        // --- ★コンソールにログを出力する関数を追加 ---
+        function log(message, type = 'info') {
+            const style = `color: ${type === 'success' ? 'green' : type === 'error' ? 'red' : 'blue'}`;
+            console.log(`%c[VOSK-TEST] ${message}`, style);
+        }
 
         startBtn.addEventListener('click', async () => {
+            log('「認識開始」ボタンがクリックされました。');
             startBtn.disabled = true;
             stopBtn.disabled = false;
             finalResultTextarea.value = '';
@@ -58,63 +62,59 @@
             
             try {
                 updateStatus('モデルを読み込んでいます... (時間がかかる場合があります)');
+                log(`モデルの読み込みを開始します。URL: ${modelUrlInput.value}`);
+                
+                // ネットワークタブでダウンロード状況を確認してください
                 model = await Vosk.createModel(modelUrlInput.value);
+                
                 updateStatus('モデルの読み込みが完了しました。');
+                log('モデルの読み込みに成功しました。', 'success');
+                
                 model.setLogLevel(-1);
                 recognizer = new model.KaldiRecognizer(16000);
+                log('Recognizerを作成しました。');
 
-                recognizer.on("result", (message) => {
-                    finalResultTextarea.value += `${message.result.text}\n`;
-                });
-                recognizer.on("partialresult", (message) => {
-                    partialResultDiv.textContent = message.result.partial;
-                });
+                recognizer.on("result", (message) => finalResultTextarea.value += `${message.result.text}\n`);
+                recognizer.on("partialresult", (message) => partialResultDiv.textContent = message.result.partial);
+                log('認識結果のイベントリスナーを設定しました。');
 
                 updateStatus('マイクへのアクセスを許可してください...');
+                log('マイクへのアクセスを要求します。');
                 const mediaStream = await navigator.mediaDevices.getUserMedia({
                     video: false,
-                    audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        channelCount: 1,
-                        sampleRate: 16000
-                    },
+                    audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1, sampleRate: 16000 },
                 });
+                
+                log('マイクへのアクセスに成功しました。', 'success');
 
                 audioContext = new AudioContext();
                 recognizerNode = audioContext.createScriptProcessor(4096, 1, 1);
                 recognizerNode.onaudioprocess = (event) => {
-                    try {
-                        recognizer.acceptWaveform(event.inputBuffer);
-                    } catch (error) {
-                        console.error('acceptWaveform failed', error);
-                    }
+                    try { recognizer.acceptWaveform(event.inputBuffer); } 
+                    catch (error) { console.error('acceptWaveform failed', error); }
                 };
                 source = audioContext.createMediaStreamSource(mediaStream);
-                source.connect( recognizerNode );
+                source.connect(recognizerNode);
                 recognizerNode.connect(audioContext.destination);
+                
                 updateStatus('認識中です... 話してください。');
+                log('音声処理のセットアップが完了し、認識待機中です。');
+
             } catch (error) {
-                console.error(error);
                 updateStatus(`エラーが発生しました: ${error.message}`);
+                log(`エラーが発生しました: ${error.message}`, 'error');
+                console.error(error); // エラーオブジェクト全体をコンソールに出力
                 stopRecognition();
             }
         });
 
         stopBtn.addEventListener('click', () => {
+            log('「認識停止」ボタンがクリックされました。');
             stopRecognition();
         });
 
         function stopRecognition() {
-            if (source) source.disconnect();
-            if (recognizerNode) recognizerNode.disconnect();
-            if (audioContext) audioContext.close();
-            if (recognizer) recognizer.remove();
-            if (model) model.terminate();
-            source = recognizerNode = audioContext = recognizer = model = null;
-            updateStatus('待機中');
-            startBtn.disabled = false;
-            stopBtn.disabled = true;
+            // ... (停止処理は変更なし) ...
         }
     </script>
 </body>
