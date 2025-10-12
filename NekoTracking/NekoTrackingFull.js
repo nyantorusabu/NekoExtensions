@@ -1,6 +1,6 @@
 // Name: NekoTrackingFull
 // ID: NekoTrackingFull
-// Description: カメラを使用してローカルで顔のいろんなパーツをトラッキングします
+// Description: カメラを使用してローカルで体のいろんなパーツをトラッキングします
 // By: nyantorusabu
 // License: MIT
 (function(Scratch) {
