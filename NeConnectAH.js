@@ -1,7 +1,7 @@
 // Name: NeConnect
-// ID: NeConnect
+// ID: NeConnectAH
 // Description: Create and manage host-based P2P connections for online games.
-// By: nyantorusabu
+// By: nyantorusabu (modified: AutoHost feature)
 
 (function (Scratch) {
 "use strict";
@@ -24,7 +24,7 @@ document.body.appendChild(script);
 const HEARTBEAT_INTERVAL = 1000; // 1 seconds
 const HEARTBEAT_TIMEOUT = 5000; // 5 seconds
 
-class NeConnect {
+class NeConnectAH {
 constructor() {
     this._reset();
     // 拡張機能の初期化時にライブラリ読み込みを開始し、そのPromiseを保存する
@@ -37,7 +37,7 @@ constructor() {
 
 getInfo() {
 return {
-id: "NeConnect", name: "NeConnect", menuIconURI: menuIconURI, blockIconURI: blockIconURI, color1: "#46BFFF", color2: "#2A99FF", color3: "#1A88FF",
+id: "NeConnectAH", name: "NeConnect (AutoHost)", menuIconURI: menuIconURI, blockIconURI: blockIconURI, color1: "#46BFFF", color2: "#2A99FF", color3: "#1A88FF",
 blocks: [
 { opcode: "createRoom", blockType: Scratch.BlockType.COMMAND, text: "部屋 [ROOM] をホスト [USER] として作る", arguments: { ROOM: { type: Scratch.ArgumentType.STRING, defaultValue: "my-room" }, USER: { type: Scratch.ArgumentType.STRING, defaultValue: "host" } } },
 { opcode: "joinRoom", blockType: Scratch.BlockType.COMMAND, text: "部屋 [ROOM] に [USER] として参加する", arguments: { ROOM: { type: Scratch.ArgumentType.STRING, defaultValue: "my-room" }, USER: { type: Scratch.ArgumentType.STRING, defaultValue: "client" } } },
@@ -404,7 +404,8 @@ _startHostHeartbeatCheck() {
     clearTimeout(this.hostHeartbeatTimeout);
     this.hostHeartbeatTimeout = setTimeout(() => {
         if (!this.isExiting) {
-            this._reset("ホストからの応答がありませんでした");
+            // ホストからの応答が一定時間なければフェイルオーバー処理へ
+            this._handleHostLoss();
         }
     }, HEARTBEAT_TIMEOUT);
 }
@@ -458,8 +459,8 @@ if (this.isHost) {
 conn.on('close', () => this._removeUser(conn.metadata.userName, '接続が切れました'));
 conn.on('error', () => this._removeUser(conn.metadata.userName, 'エラーが発生しました'));
 } else {
-conn.on('close', () => { if (!this.isExiting) this._reset("ホストがルームを解散しました"); });
-conn.on('error', () => { if (!this.isExiting) this._reset("ホストとの接続が切断されました"); });
+conn.on('close', () => { if (!this.isExiting) this._handleHostLoss(); });
+conn.on('error', () => { if (!this.isExiting) this._handleHostLoss(); });
 }
 }
 
@@ -498,6 +499,60 @@ this.lastLeftUser = userName;
 this.didUserLeave = true;
 Scratch.vm.runtime.startHats("NeConnect_whenUserLeft");
 }
+}
+
+// --- Host loss handling & auto-host election ---
+_electHostCandidate() {
+    // 候補は既知のユーザーと自分。重複除去して文字列順で最小を選ぶ（安定した決定ルール）
+    const candidates = Array.from(new Set([...(this.users || []), this.userName].filter(Boolean)));
+    if (candidates.length === 0) return null;
+    candidates.sort(); // 文字列順
+    return candidates[0];
+}
+
+_handleHostLoss() {
+    if (this.isHost || this.isExiting) return;
+    console.log("Host seems down. Starting auto-host election...");
+
+    const chosen = this._electHostCandidate();
+    console.log("Auto-host chosen:", chosen);
+
+    if (!chosen) {
+        // 候補なしなら従来のリセット挙動
+        this._reset("ホストが見つかりませんでした");
+        return;
+    }
+
+    if (chosen === this.userName) {
+        // 自分が選ばれた -> ホストとして部屋を作成
+        console.log("I am chosen as the new host. Attempting to create room...");
+        if (this.peer) {
+            this.isExiting = true;
+            try { this.peer.destroy(); } catch (e) {}
+            this.isExiting = false;
+            this.peer = null;
+        }
+        // createRoom は内部で _reset 等を使うのでそのまま呼ぶ
+        this.createRoom({ ROOM: this.roomName, USER: this.userName }).catch(err => {
+            console.warn("Failed to create room during failover:", err);
+            // 失敗したら従来のリセットにフォールバック
+            this._reset("ホストの切断後のホスト生成に失敗しました");
+        });
+    } else {
+        // 別のユーザーが選ばれた -> そのホストに接続を試みる
+        console.log("Attempting to reconnect to the new host...");
+        if (this.peer) {
+            this.isExiting = true;
+            try { this.peer.destroy(); } catch (e) {}
+            this.isExiting = false;
+            this.peer = null;
+        }
+        // connectToRoom は失敗したら自分がホストを作るフォールバックがある（既存の処理を再利用）
+        this.connectToRoom({ ROOM: this.roomName, USER: this.userName }).catch(err => {
+            console.warn("Reconnect attempt failed during failover:", err);
+            // ここでは再試行やリセットはしないが、必要なら追加可能
+        });
+    }
 }
 
 // --- Data Transmission ---
@@ -810,5 +865,5 @@ if (users.length === 0) return ["全員"];
 return ["全員", ...users];
 }
 }
-Scratch.extensions.register(new NeConnect());
+Scratch.extensions.register(new NeConnectAH());
 })(Scratch);
