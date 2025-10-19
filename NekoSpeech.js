@@ -2,7 +2,6 @@
 // ID: NekoSpeech
 // Description: WebSpeechAPIを使用して音声認識を実装します。
 // By: nyantorusabu
-// License: MIT
 
 (function(Scratch) {
   'use strict';

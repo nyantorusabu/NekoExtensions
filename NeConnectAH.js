@@ -1,7 +1,7 @@
 // Name: NeConnect
 // ID: NeConnectAH
 // Description: Create and manage host-based P2P connections for online games.
-// By: nyantorusabu (modified: AutoHost feature)
+// By: nyantorusabu
 
 (function (Scratch) {
 "use strict";

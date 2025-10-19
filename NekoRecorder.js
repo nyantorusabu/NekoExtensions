@@ -2,7 +2,6 @@
 // ID: nekoRecorder
 // Description: プロジェクトを簡単に録画します
 // By: nyantorusabu
-// License: MIT
 
 (function(Scratch) {
   'use strict';
