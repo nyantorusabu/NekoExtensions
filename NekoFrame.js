@@ -341,7 +341,7 @@
       let w = this.width >= 0 ? this.width : rect.width;
       let h = this.height >= 0 ? this.height : rect.height;
       let left = rect.left + window.scrollX + this.x;
-      let top = rect.top + window.scrollY + this.y;
+      let top = rect.top + window.scrollY - this.y;
 
       this.iframe.style.width = `${w}px`;
       this.iframe.style.height = `${h}px`;
