@@ -141,7 +141,7 @@ this.clientHeartbeatTimers = new Map();
 if (reason) {
 this.disconnectionReason = reason;
 this.wasDisconnected = true;
-setTimeout(() => Scratch.vm.runtime.startHats("NeConnect_whenDisconnected"), 50);
+setTimeout(() => Scratch.vm.runtime.startHats("NeConnectAH_whenDisconnected"), 50);
 } else {
 this.disconnectionReason = '';
 this.wasDisconnected = false;
@@ -450,7 +450,7 @@ if (this.isHost) {
     this._broadcastData({ type: 'system', sub: 'user-joined', payload: { userName: remoteUserName } }, [remoteUserName]);
     this.lastJoinedUser = remoteUserName;
     this.didUserJoin = true;
-    Scratch.vm.runtime.startHats("NeConnect_whenUserJoined");
+    Scratch.vm.runtime.startHats("NeConnectAH_whenUserJoined");
 }
 });
 
@@ -497,7 +497,7 @@ if (this.isHost) {
 this._broadcastData({ type: 'system', sub: 'user-left', payload: { userName: userName } });
 this.lastLeftUser = userName;
 this.didUserLeave = true;
-Scratch.vm.runtime.startHats("NeConnect_whenUserLeft");
+Scratch.vm.runtime.startHats("NeConnectAH_whenUserLeft");
 }
 }
 
@@ -567,7 +567,7 @@ const processReceivedUserData = (from, content) => {
         this.dataQueue.push(newData);
     }
     this.isNewDataAvailable = true;
-    Scratch.vm.runtime.startHats("NeConnect_whenDataReceived");
+    Scratch.vm.runtime.startHats("NeConnectAH_whenDataReceived");
 };
 
 if (data.type === 'system') {
@@ -582,7 +582,7 @@ if (!this.users.includes(joinedUserName)) {
 this.users.push(joinedUserName);
 this.lastJoinedUser = joinedUserName;
 this.didUserJoin = true;
-Scratch.vm.runtime.startHats("NeConnect_whenUserJoined");
+Scratch.vm.runtime.startHats("NeConnectAH_whenUserJoined");
 if (this.localStream) {
 this._callUser(joinedUserName);
 }
@@ -593,7 +593,7 @@ const leftUserName = data.payload.userName;
 this.users = this.users.filter(u => u !== leftUserName);
 this.lastLeftUser = leftUserName;
 this.didUserLeave = true;
-Scratch.vm.runtime.startHats("NeConnect_whenUserLeft");
+Scratch.vm.runtime.startHats("NeConnectAH_whenUserLeft");
 break;
 case 'kicked':
 this._reset("ホストによってキックされました");
