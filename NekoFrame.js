@@ -8,19 +8,15 @@
 
   class NekoFrame {
     constructor() {
-      this.iframe = null;
+      this.frames = new Map();
       this.lastMessage = "";
+      this.lastSender = "";
       this._boundOnMessage = this._onMessage.bind(this);
-      this._boundUpdateFrame = this._updateFrame.bind(this);
+      this._boundUpdateFrames = this._updateFrames.bind(this);
       this._resizeObserver = null;
       this._mutationObserver = null;
       this._intersectionObserver = null;
-      this.x = 0;
-      this.y = 0;
-      this.width = -1;
-      this.height = -1;
-      this.visible = true;
-      this.interactive = true;
+      this.observersStarted = false;
     }
 
     getInfo() {
@@ -34,71 +30,87 @@
           {
             opcode: "open",
             blockType: Scratch.BlockType.COMMAND,
-            text: "[URL] を開く",
+            text: "[ID] で [URL] を開く",
             arguments: {
+              ID: { type: Scratch.ArgumentType.STRING, defaultValue: "default" },
               URL: { type: Scratch.ArgumentType.STRING, defaultValue: "https://example.com" },
             },
           },
           {
             opcode: "openHTML",
             blockType: Scratch.BlockType.COMMAND,
-            text: "HTML [HTML] を開く",
+            text: "[ID] で HTML [HTML] を開く",
             arguments: {
+              ID: { type: Scratch.ArgumentType.STRING, defaultValue: "default" },
               HTML: { type: Scratch.ArgumentType.STRING, defaultValue: "<h1>Hello, World!</h1>" },
             },
           },
           {
             opcode: "show",
             blockType: Scratch.BlockType.COMMAND,
-            text: "フレームを表示",
+            text: "[ID] を表示",
+            arguments: {
+              ID: { type: Scratch.ArgumentType.STRING, defaultValue: "default" },
+            },
           },
           {
             opcode: "hide",
             blockType: Scratch.BlockType.COMMAND,
-            text: "フレームを非表示",
+            text: "[ID] を非表示",
+            arguments: {
+              ID: { type: Scratch.ArgumentType.STRING, defaultValue: "default" },
+            },
           },
           {
             opcode: "close",
             blockType: Scratch.BlockType.COMMAND,
-            text: "ページを閉じる",
+            text: "[ID] を閉じる",
+            arguments: {
+              ID: { type: Scratch.ArgumentType.STRING, defaultValue: "default" },
+            },
           },
           {
             opcode: "setX",
             blockType: Scratch.BlockType.COMMAND,
-            text: "X座標を [X] に設定",
+            text: "[ID] の X座標を [X] に設定",
             arguments: {
+              ID: { type: Scratch.ArgumentType.STRING, defaultValue: "default" },
               X: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
             },
           },
           {
             opcode: "setY",
             blockType: Scratch.BlockType.COMMAND,
-            text: "Y座標を [Y] に設定",
+            text: "[ID] の Y座標を [Y] に設定",
             arguments: {
+              ID: { type: Scratch.ArgumentType.STRING, defaultValue: "default" },
               Y: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
             },
           },
           {
             opcode: "setWidth",
             blockType: Scratch.BlockType.COMMAND,
-            text: "幅を [WIDTH] に設定",
+            text: "[ID] の幅を [WIDTH] に設定",
             arguments: {
+              ID: { type: Scratch.ArgumentType.STRING, defaultValue: "default" },
               WIDTH: { type: Scratch.ArgumentType.NUMBER, defaultValue: 480 },
             },
           },
           {
             opcode: "setHeight",
             blockType: Scratch.BlockType.COMMAND,
-            text: "高さを [HEIGHT] に設定",
+            text: "[ID] の高さを [HEIGHT] に設定",
             arguments: {
+              ID: { type: Scratch.ArgumentType.STRING, defaultValue: "default" },
               HEIGHT: { type: Scratch.ArgumentType.NUMBER, defaultValue: 360 },
             },
           },
           {
             opcode: "setInteractive",
             blockType: Scratch.BlockType.COMMAND,
-            text: "インタラクティブを [INTERACTIVE] に設定",
+            text: "[ID] のインタラクティブを [INTERACTIVE] に設定",
             arguments: {
+              ID: { type: Scratch.ArgumentType.STRING, defaultValue: "default" },
               INTERACTIVE: {
                 type: Scratch.ArgumentType.STRING,
                 menu: "booleanMenu",
@@ -107,10 +119,30 @@
             },
           },
           {
+            opcode: "renameFrame",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "フレーム [ID] を [NEW_ID] にリネーム",
+            arguments: {
+              ID: { type: Scratch.ArgumentType.STRING, defaultValue: "default" },
+              NEW_ID: { type: Scratch.ArgumentType.STRING, defaultValue: "new" },
+            },
+          },
+          {
+            opcode: "allFrames",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "すべてのフレーム",
+          },
+          "---",
+          {
             opcode: "whenMessageReceived",
             blockType: Scratch.BlockType.HAT,
             text: "メッセージを受け取ったとき",
             isEdgeActivated: false,
+          },
+          {
+            opcode: "messageSender",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "メッセージの送信元",
           },
           {
             opcode: "receivedMessage",
@@ -120,8 +152,9 @@
           {
             opcode: "sendMessage",
             blockType: Scratch.BlockType.COMMAND,
-            text: "メッセージ [MESSAGE] を送信",
+            text: "[ID] にメッセージ [MESSAGE] を送信",
             arguments: {
+              ID: { type: Scratch.ArgumentType.STRING, defaultValue: "default" },
               MESSAGE: { type: Scratch.ArgumentType.STRING, defaultValue: "" },
             },
           },
@@ -138,87 +171,164 @@
       };
     }
 
-    async open({ URL }) {
+    async open({ ID, URL }) {
+      const id = String(ID || "").trim();
       const url = String(URL || "").trim();
-      if (!url) return;
+      if (!id || !url) return;
 
       if (await this._canEmbed(url)) {
-        this._removeIframe();
+        this._removeFrame(id);
 
-        const iframe = this._createIframe(url);
+        const iframe = this._createIframe(url, id);
         document.body.appendChild(iframe);
-        this.iframe = iframe;
 
-        window.addEventListener("message", this._boundOnMessage);
-        this._startAutoUpdate();
-        this._updateFrame();
+        const instance = {
+          iframe,
+          x: 0,
+          y: 0,
+          width: -1,
+          height: -1,
+          visible: true,
+          interactive: true,
+        };
+        this.frames.set(id, instance);
+
+        if (!this.observersStarted) {
+          window.addEventListener("message", this._boundOnMessage);
+          this._startAutoUpdate();
+          this.observersStarted = true;
+        }
+        this._updateFrames();
       }
     }
 
-    async openHTML({ HTML }) {
+    async openHTML({ ID, HTML }) {
+      const id = String(ID || "").trim();
       const html = String(HTML || "").trim();
-      if (!html) return;
+      if (!id || !html) return;
 
       const url = `data:text/html,${encodeURIComponent(html)}`;
       if (await this._canEmbed(url)) {
-        this._removeIframe();
+        this._removeFrame(id);
 
-        const iframe = this._createIframe(url);
+        const iframe = this._createIframe(url, id);
         document.body.appendChild(iframe);
-        this.iframe = iframe;
 
-        window.addEventListener("message", this._boundOnMessage);
-        this._startAutoUpdate();
-        this._updateFrame();
+        const instance = {
+          iframe,
+          x: 0,
+          y: 0,
+          width: -1,
+          height: -1,
+          visible: true,
+          interactive: true,
+        };
+        this.frames.set(id, instance);
+
+        if (!this.observersStarted) {
+          window.addEventListener("message", this._boundOnMessage);
+          this._startAutoUpdate();
+          this.observersStarted = true;
+        }
+        this._updateFrames();
       }
     }
 
-    show() {
-      this.visible = true;
-      this._updateFrame();
+    show({ ID }) {
+      const id = String(ID || "").trim();
+      const instance = this.frames.get(id);
+      if (instance) {
+        instance.visible = true;
+        this._updateFrames();
+      }
     }
 
-    hide() {
-      this.visible = false;
-      this._updateFrame();
+    hide({ ID }) {
+      const id = String(ID || "").trim();
+      const instance = this.frames.get(id);
+      if (instance) {
+        instance.visible = false;
+        this._updateFrames();
+      }
     }
 
-    close() {
-      this._removeIframe();
+    close({ ID }) {
+      const id = String(ID || "").trim();
+      this._removeFrame(id);
+      if (this.frames.size === 0) {
+        this._stopObservers();
+        window.removeEventListener("message", this._boundOnMessage);
+        this.observersStarted = false;
+      }
     }
 
-    setX({ X }) {
-      this.x = Scratch.Cast.toNumber(X);
-      this._updateFrame();
+    setX({ ID, X }) {
+      const id = String(ID || "").trim();
+      const instance = this.frames.get(id);
+      if (instance) {
+        instance.x = Scratch.Cast.toNumber(X);
+        this._updateFrames();
+      }
     }
 
-    setY({ Y }) {
-      this.y = Scratch.Cast.toNumber(Y);
-      this._updateFrame();
+    setY({ ID, Y }) {
+      const id = String(ID || "").trim();
+      const instance = this.frames.get(id);
+      if (instance) {
+        instance.y = Scratch.Cast.toNumber(Y);
+        this._updateFrames();
+      }
     }
 
-    setWidth({ WIDTH }) {
-      this.width = Scratch.Cast.toNumber(WIDTH);
-      this._updateFrame();
+    setWidth({ ID, WIDTH }) {
+      const id = String(ID || "").trim();
+      const instance = this.frames.get(id);
+      if (instance) {
+        instance.width = Scratch.Cast.toNumber(WIDTH);
+        this._updateFrames();
+      }
     }
 
-    setHeight({ HEIGHT }) {
-      this.height = Scratch.Cast.toNumber(HEIGHT);
-      this._updateFrame();
+    setHeight({ ID, HEIGHT }) {
+      const id = String(ID || "").trim();
+      const instance = this.frames.get(id);
+      if (instance) {
+        instance.height = Scratch.Cast.toNumber(HEIGHT);
+        this._updateFrames();
+      }
     }
 
-    setInteractive({ INTERACTIVE }) {
-      this.interactive = Scratch.Cast.toBoolean(INTERACTIVE);
-      this._updateFrame();
+    setInteractive({ ID, INTERACTIVE }) {
+      const id = String(ID || "").trim();
+      const instance = this.frames.get(id);
+      if (instance) {
+        instance.interactive = Scratch.Cast.toBoolean(INTERACTIVE);
+        this._updateFrames();
+      }
     }
 
-    sendMessage({ MESSAGE }) {
+    renameFrame({ ID, NEW_ID }) {
+      const id = String(ID || "").trim();
+      const newId = String(NEW_ID || "").trim();
+      if (!id || !newId || id === newId) return;
+      if (this.frames.has(id) && !this.frames.has(newId)) {
+        const instance = this.frames.get(id);
+        this.frames.delete(id);
+        this.frames.set(newId, instance);
+        this._updateFrames();
+      }
+    }
+
+    sendMessage({ ID, MESSAGE }) {
+      const id = String(ID || "").trim();
       const msg = String(MESSAGE || "");
-      if (!this.iframe || !this.iframe.contentWindow) return;
-      try {
-        this.iframe.contentWindow.postMessage(msg, "*");
-      } catch (e) {
-        // ignore
+      const instance = this.frames.get(id);
+      if (instance && instance.iframe && instance.iframe.contentWindow) {
+        try {
+          instance.iframe.contentWindow.postMessage(msg, "*");
+        } catch (e) {
+          // ignore
+        }
       }
     }
 
@@ -230,11 +340,19 @@
       return this.lastMessage;
     }
 
+    messageSender() {
+      return this.lastSender;
+    }
+
+    allFrames() {
+      return JSON.stringify(Array.from(this.frames.keys()));
+    }
+
     // --- Internal Utilities ---
 
-    _createIframe(src) {
+    _createIframe(src, id) {
       const iframe = document.createElement("iframe");
-      iframe.id = "nekoframe-iframe";
+      iframe.id = `nekoframe-iframe-${id}`;
       iframe.src = src;
 
       iframe.setAttribute(
@@ -316,76 +434,94 @@
       return z;
     }
 
-    _updateFrame() {
-      if (!this.iframe) return;
+    _updateFrames() {
       const canvas = this._findStageCanvas();
-
-      if (!canvas || !this.visible || !this._isElementVisible(canvas)) {
-        this.iframe.style.display = "none";
+      if (!canvas || !this._isElementVisible(canvas)) {
+        for (const instance of this.frames.values()) {
+          instance.iframe.style.display = "none";
+        }
         return;
       }
 
       const rect = canvas.getBoundingClientRect();
       if (rect.width === 0 || rect.height === 0) {
-        this.iframe.style.display = "none";
+        for (const instance of this.frames.values()) {
+          instance.iframe.style.display = "none";
+        }
         return;
       }
 
-      this.iframe.style.display = "block";
-      this.iframe.style.visibility = "visible";
-
-      let w = this.width >= 0 ? this.width : rect.width;
-      let h = this.height >= 0 ? this.height : rect.height;
-      let left = rect.left + window.scrollX + this.x;
-      let top = rect.top + window.scrollY - this.y;
-
-      this.iframe.style.width = `${w}px`;
-      this.iframe.style.height = `${h}px`;
-      this.iframe.style.left = `${left}px`;
-      this.iframe.style.top = `${top}px`;
-
-      this.iframe.style.pointerEvents = this.interactive ? "auto" : "none";
-
       const effectiveZ = this._getEffectiveZIndex(canvas);
-      this.iframe.style.zIndex = effectiveZ + 1;
+
+      for (const instance of this.frames.values()) {
+        if (!instance.visible) {
+          instance.iframe.style.display = "none";
+          continue;
+        }
+
+        instance.iframe.style.display = "block";
+        instance.iframe.style.visibility = "visible";
+
+        // width/height: if negative use the canvas size (default behavior)
+        let w = instance.width >= 0 ? instance.width : rect.width;
+        let h = instance.height >= 0 ? instance.height : rect.height;
+
+        // Compute position centered on the stage's center (Scratch coordinate system)
+        // CHANGED: center-based positioning so resizing remains centered
+        const centerX = rect.left + window.scrollX + rect.width / 2;
+        const centerY = rect.top + window.scrollY + rect.height / 2;
+
+        // instance.x is Scratch-style X (right positive), instance.y is Scratch-style Y (up positive)
+        // left/top position (top-left corner of iframe) should be:
+        //   left = centerX + x - width/2
+        //   top  = centerY - y - height/2
+        const x = Number(instance.x) || 0;
+        const y = Number(instance.y) || 0;
+        const left = centerX + x - w / 2;
+        const top = centerY - y - h / 2;
+
+        instance.iframe.style.width = `${w}px`;
+        instance.iframe.style.height = `${h}px`;
+        instance.iframe.style.left = `${left}px`;
+        instance.iframe.style.top = `${top}px`;
+
+        instance.iframe.style.pointerEvents = instance.interactive ? "auto" : "none";
+        instance.iframe.style.zIndex = effectiveZ + 1;
+      }
     }
 
     _onMessage(e) {
-      if (!this.iframe) return;
-      if (e.source !== this.iframe.contentWindow) return;
+      for (const [id, instance] of this.frames.entries()) {
+        if (e.source === instance.iframe.contentWindow) {
+          try {
+            const data = e.data;
+            this.lastMessage = typeof data === "string" ? data : JSON.stringify(data);
+          } catch (err) {
+            this.lastMessage = "[unserializable message]";
+          }
+          this.lastSender = id;
 
-      try {
-        const data = e.data;
-        this.lastMessage = typeof data === "string" ? data : JSON.stringify(data);
-      } catch (err) {
-        this.lastMessage = "[unserializable message]";
-      }
-
-      try {
-        Scratch.vm.runtime.startHats("nekoframe_whenMessageReceived");
-      } catch (err) {
-        // ignore
+          try {
+            Scratch.vm.runtime.startHats("nekoframe_whenMessageReceived");
+          } catch (err) {
+            // ignore
+          }
+          break;
+        }
       }
     }
 
-    _removeIframe() {
-      this._stopObservers();
-      window.removeEventListener("message", this._boundOnMessage);
-      window.removeEventListener("resize", this._boundUpdateFrame);
-      window.removeEventListener("scroll", this._boundUpdateFrame);
-      if (this.iframe && this.iframe.parentElement) {
-        try {
-          this.iframe.parentElement.removeChild(this.iframe);
-        } catch (e) {}
+    _removeFrame(id) {
+      const instance = this.frames.get(id);
+      if (instance) {
+        if (instance.iframe && instance.iframe.parentElement) {
+          try {
+            instance.iframe.parentElement.removeChild(instance.iframe);
+          } catch (e) {}
+        }
+        this.frames.delete(id);
       }
-      this.iframe = null;
-      this.lastMessage = "";
-      this.x = 0;
-      this.y = 0;
-      this.width = -1;
-      this.height = -1;
-      this.visible = true;
-      this.interactive = true;
+      this._updateFrames();
     }
 
     _startAutoUpdate() {
@@ -395,7 +531,7 @@
       // ResizeObserver for size changes
       if (window.ResizeObserver) {
         try {
-          this._resizeObserver = new ResizeObserver(() => this._updateFrame());
+          this._resizeObserver = new ResizeObserver(() => this._updateFrames());
           this._resizeObserver.observe(canvas);
           if (canvas.parentElement) {
             this._resizeObserver.observe(canvas.parentElement);
@@ -407,7 +543,7 @@
       // MutationObserver for style and attribute changes
       if (window.MutationObserver) {
         try {
-          this._mutationObserver = new MutationObserver(() => this._updateFrame());
+          this._mutationObserver = new MutationObserver(() => this._updateFrames());
           this._mutationObserver.observe(canvas, {
             attributes: true,
             attributeFilter: ["style", "class"],
@@ -429,7 +565,7 @@
         try {
           this._intersectionObserver = new IntersectionObserver(
             (entries) => {
-              entries.forEach(() => this._updateFrame());
+              entries.forEach(() => this._updateFrames());
             },
             { threshold: [0, 0.5, 1] }
           );
@@ -438,8 +574,8 @@
       }
 
       // Additional event listeners for scroll and resize
-      window.addEventListener("resize", this._boundUpdateFrame);
-      window.addEventListener("scroll", this._boundUpdateFrame);
+      window.addEventListener("resize", this._boundUpdateFrames);
+      window.addEventListener("scroll", this._boundUpdateFrames);
     }
 
     _stopObservers() {
@@ -461,6 +597,8 @@
         } catch (e) {}
         this._intersectionObserver = null;
       }
+      window.removeEventListener("resize", this._boundUpdateFrames);
+      window.removeEventListener("scroll", this._boundUpdateFrames);
     }
 
     async _canEmbed(url) {

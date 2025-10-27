@@ -24,18 +24,18 @@
           {
             opcode: "whenMessageReceived",
             blockType: Scratch.BlockType.HAT,
-            text: "メッセージを受け取ったとき",
+            text: "親ページからメッセージを受け取ったとき",
             isEdgeActivated: false,
           },
           {
             opcode: "receivedMessage",
             blockType: Scratch.BlockType.REPORTER,
-            text: "受け取ったメッセージ",
+            text: "親ページから受け取ったメッセージ",
           },
           {
             opcode: "sendMessage",
             blockType: Scratch.BlockType.COMMAND,
-            text: "メッセージ [MESSAGE] を送信",
+            text: "親ページにメッセージ [MESSAGE] を送信",
             arguments: {
               MESSAGE: { type: Scratch.ArgumentType.STRING, defaultValue: "" },
             },
