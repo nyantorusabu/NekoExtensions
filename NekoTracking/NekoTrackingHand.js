@@ -159,7 +159,7 @@
           { opcode: 'setTrackingPrecision', blockType: Scratch.BlockType.COMMAND, text: 'トラッキングの精度を[PRECISION]にする', arguments: { PRECISION: { type: Scratch.ArgumentType.STRING, menu: 'PRECISION_MENU', defaultValue: '2' } } },
           { opcode: 'getTrackingPrecision', blockType: Scratch.BlockType.REPORTER, text: 'トラッキング精度' },
           '---',
-          { opcode: 'getHandPartPosition', blockType: Scratch.BlockType.REPORTER, text: '[HAND]手のパーツ[PART]の[AXIS]座標', arguments: { HAND: { type: Scratch.ArgumentType.STRING, menu: 'HAND_SIDE_MENU', defaultValue: 'right' }, PART: { type: Scratch.ArgumentType.STRING, menu: 'HAND_PART_MENU', defaultValue: '親指先 (Thumb Tip)' }, AXIS: { type: Scratch.ArgumentType.STRING, menu: 'AXIS_MENU', defaultValue: 'x' } } },
+          { opcode: 'getHandPartPosition', blockType: Scratch.BlockType.REPORTER, text: '[HAND]手のパーツ[PART]の[AXIS]座標', arguments: { HAND: { type: Scratch.ArgumentType.STRING, menu: 'HAND_SIDE_MENU', defaultValue: 'right' }, PART: { type: Scratch.ArgumentType.STRING, menu: 'HAND_PART_MENU', defaultValue: '親指_先端' }, AXIS: { type: Scratch.ArgumentType.STRING, menu: 'AXIS_MENU', defaultValue: 'x' } } },
         ],
         menus: {
           TRACKING_STATE_MENU: { acceptReporters: true, items: [{text: '開始', value: 'start'}, {text: '停止', value: 'stop'}] },
