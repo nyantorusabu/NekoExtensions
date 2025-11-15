@@ -121,12 +121,10 @@
             });
         }
 
-        // 現在の名前空間ID
         getNamespace() {
             return this.namespace;
         }
 
-        // データ一覧（JSON Array文字列で返す。各要素は文字列ID）
         async listKeys() {
             const nsPrefix = `${this.namespace}:`;
             return await this._withStore('readonly', (store, resolve, reject) => {
@@ -143,7 +141,6 @@
             });
         }
 
-        // [ID] の消費サイズ（byte）
         async getSize(args) {
             const id = String(args.ID || '');
             const key = `${this.namespace}:${id}`;
@@ -167,7 +164,6 @@
             }
         }
 
-        // 全体の消費サイズ（現在の名前空間全体、byte）
         async getTotalSize() {
             const nsPrefix = `${this.namespace}:`;
             return await this._withStore('readonly', (store, resolve, reject) => {
@@ -194,7 +190,6 @@
             });
         }
 
-        // 保存可能なサイズ（ブラウザが報告するクォータ。byte単位。利用できない場合は -1 を返す）
         async getQuota() {
             try {
                 if (navigator.storage && navigator.storage.estimate) {
@@ -205,7 +200,6 @@
             return -1;
         }
 
-        // 残りのサイズ（quota - usage。利用できない場合は -1）
         async getRemaining() {
             try {
                 if (navigator.storage && navigator.storage.estimate) {
