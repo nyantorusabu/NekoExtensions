@@ -27,7 +27,8 @@
                     { opcode: 'clearNamespace', blockType: Scratch.BlockType.COMMAND, text: 'データをすべて削除' },
                     "---",
                     { opcode: 'listKeys', blockType: Scratch.BlockType.REPORTER, text: 'データ一覧' },
-                     { opcode: 'getData', blockType: Scratch.BlockType.REPORTER, text: '[ID] のデータ', arguments: { ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'key' } } },
+                    { opcode: 'getData', blockType: Scratch.BlockType.REPORTER, text: '[ID] のデータ', arguments: { ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'key' } } },
+                    { opcode: 'hasData', blockType: Scratch.BlockType.BOOLEAN, text: '[ID] にデータがある', arguments: { ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'key' } } },
                     "---",
                     { opcode: 'getQuota', blockType: Scratch.BlockType.REPORTER, text: '保存可能なサイズ' },
                     { opcode: 'getRemaining', blockType: Scratch.BlockType.REPORTER, text: '残りのサイズ' },
@@ -95,6 +96,21 @@
                 if (typeof v === 'string') return v;
                 try { return JSON.stringify(v); } catch { return String(v); }
             } catch { return ''; }
+        }
+
+        async hasData(args) {
+            const id = String(args.ID || '');
+            const key = `${this.namespace}:${id}`;
+            try {
+                const rec = await this._withStore('readonly', (store, resolve, reject) => {
+                    const req = store.get(key);
+                    req.onsuccess = (ev) => resolve(ev.target.result);
+                    req.onerror = (ev) => reject(ev.target.error);
+                });
+                return !!rec;
+            } catch (e) {
+                return false;
+            }
         }
 
         async deleteData(args) {
