@@ -65,13 +65,16 @@ if (typeof vm !== 'undefined') {
 } else {
     NDT.VM = Object.values(document.getElementById('app'))[0].child.updateQueue.lastEffect.deps[1].scratchGui.vm;
 }
+if (!NDT.VM) {
+    Log('e', 'ScratchVMへのアクセスに失敗しました!\nScratchVMの仕様が変更された可能性があります');
+}
 NDT.RT = NDT.VM.runtime;
 
 
 // Info/Option
 NDT.Info = {};
-NDT.Info.Ver = '0.0.3';
-NDT.Info.Message = `Var全般が動作していなかった問題を修正`;
+NDT.Info.Ver = '0.0.4';
+NDT.Info.Message = `ScratchVMにアクセスできなかった時にログを残すよう変更`;
 NDT.Option = {};
 NDT.Option.DisCheck = false;
 
