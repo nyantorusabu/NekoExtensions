@@ -70,8 +70,8 @@ NDT.RT = NDT.VM.runtime;
 
 // Info/Option
 NDT.Info = {};
-NDT.Info.Ver = '0.0.1';
-NDT.Info.Message = `NDT.Infoを追加`;
+NDT.Info.Ver = '0.0.2';
+NDT.Info.Message = `NDT.Spr.Var.GetFullが動作していなかった問題を修正`;
 NDT.Option = {};
 NDT.Option.DisCheck = false;
 
@@ -174,7 +174,7 @@ NDT.Spr.Var.GetFull = function(SprID, VarID) {
     ChkType('s', VarID);
     const target = NDT.Spr.Get(SprID);
     if (!target) return;
-    const Vars = target.variables;
+    const Vars = Object.values(target.variables);
     const IDS = Vars.find(v => v.id === VarID);
     if (IDS) return IDS;
     const NAMES = Vars.find(v => v.name === VarID);
