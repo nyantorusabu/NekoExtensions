@@ -1,0 +1,20 @@
+**注意: これは拡張機能ではありません**  
+# NekoDevTool
+NekoDevToolはScratchVMにある程度簡単にアクセスできるようになる何かです。  
+バニラでも使えるしTurboWarpのようなMod環境でも多分使えます。  
+コンソールなどでNDTを実行後``NDT``でアクセスできます。  
+詳しい使い方はやる気が出たら書きます。  
+# 現在使えるもの
+- ``NDT.VM`` - ScratchVMに直接アクセスできます。
+- ``NDT.RT`` - Runtimeにアクセスできます。ただのショートカット。
+- ``NDT.Event`` or ``NDT.Eve`` - イベント関係。
+- ``NDT.Sprite`` or ``NDT.Spr`` - スプライト関係。
+- ``NDT.Sprite.Variable`` or ``NDT.Sprite.Var`` - ローカル変数関係。
+- ``NDT.Variable`` or ``NDT.Var`` - グローバル変数関係。
+- ``NDT.Option`` - 設定
+# 設定できる項目
+- ``NDT.Option.DisCheck`` - Boolean(真偽値) - 有効にすると実行時型チェックを行わないようになります。軽量化に。
+# 型チェックについて
+NDTは関数を実行するときに一部の引数の型を確認します。  
+型が間違っていた場合エラーを吐きます(処理は止めません)  
+無効にしたい場合は``NDT.Option.DisCheck``を有効にしてください。
