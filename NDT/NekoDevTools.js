@@ -73,8 +73,8 @@ NDT.RT = NDT.VM.runtime;
 
 // Info/Option
 NDT.Info = {};
-NDT.Info.Ver = '0.0.4';
-NDT.Info.Message = `ScratchVMにアクセスできなかった時にログを残すよう変更`;
+NDT.Info.Ver = '0.0.5';
+NDT.Info.Message = `.NameListを追加`;
 NDT.Option = {};
 NDT.Option.DisCheck = false;
 
@@ -99,6 +99,7 @@ NDT.Sprite = {};
 NDT.Spr = NDT.Sprite;
 NDT.Spr.ALL = NDT.VM.runtime.targets;
 NDT.Spr.List = NDT.Spr.ALL.map(s => s.id);
+NDT.Spr.NameList = NDT.Spr.ALL.map(s => s.getName());
 
 NDT.Spr.Get = function(SprID) {
     ChkType('s', SprID);
@@ -172,6 +173,12 @@ NDT.Spr.Var.List = function(SprID) {
     if (!target) return;
     return Object.values(target.variables).map(v => v.id);
 }
+NDT.Spr.Var.NameList = function(SprID) {
+    ChkType('s', SprID);
+    const target = NDT.Spr.Get(SprID);
+    if (!target) return;
+    return Object.values(target.variables).map(v => v.name);
+}
 NDT.Spr.Var.GetFull = function(SprID, VarID) {
     ChkType('s', SprID);
     ChkType('s', VarID);
@@ -233,6 +240,9 @@ NDT.Var.All = function() {
 }
 NDT.Var.List = function() {
     return NDT.Var.All().map(v => v.id);
+}
+NDT.Var.NameList = function() {
+    return NDT.Var.All().map(v => v.name);
 }
 NDT.Var.GetFull = function(VarID) {
     ChkType('s', VarID);
