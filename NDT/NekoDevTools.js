@@ -73,8 +73,8 @@ NDT.RT = NDT.VM.runtime;
 
 // Info/Option
 NDT.Info = {};
-NDT.Info.Ver = '0.0.7';
-NDT.Info.Message = `.List.SetArrayを追加`;
+NDT.Info.Ver = '0.0.8';
+NDT.Info.Message = `導入時ログを残すよう変更`;
 NDT.Option = {};
 NDT.Option.DisCheck = false;
 
@@ -344,3 +344,4 @@ NDT.List.Rename = function(VarID, NewName){
 
 // イベント
 document.dispatchEvent(new Event("NDT_Loaded"));
+Log('l', `NDT V${NDT.Info.Ver} is Loaded.`);
