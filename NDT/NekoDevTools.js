@@ -166,7 +166,7 @@ NDT.Spr.Var.List = function(SprID) {
     if (!target) return;
     return Object.values(target.variables).map(v => v.id);
 }
-NDT.Spr.Var.Get = function(SprID, VarID) {
+NDT.Spr.Var.GetFull = function(SprID, VarID) {
     ChkType('s', SprID);
     ChkType('s', VarID);
     const target = NDT.Spr.Get(SprID);
@@ -177,6 +177,9 @@ NDT.Spr.Var.Get = function(SprID, VarID) {
     const NAMES = Vars.find(v => v.name === VarID);
     if (NAMES) return NAMES;
     Log('e', `スプライト${SprID}に${VarID}というローカル変数は見つかりませんでした`);
+}
+NDT.Spr.Var.Get = function(SprID, VarID) {
+    return NDT.Spr.Var.GetFull(SprID, VarID,).value;
 }
 NDT.Spr.Variable.Set = function(SprID, VarID, Value) {
     ChkType('s', SprID);
@@ -198,7 +201,7 @@ NDT.Spr.Variable.Add = function(SprID, VarID, Value) {
     if (!Var) return;
     NDT.Spr.ALL[Pos].variables[Var.id].value += Value;
 }
-NDT.Spr.Variable.Set = function(SprID, VarID, NewName) {
+NDT.Spr.Variable.Rename = function(SprID, VarID, NewName) {
     ChkType('s', SprID);
     ChkType('s', VarID);
     ChkType('s', NewName);
@@ -225,7 +228,7 @@ NDT.Var.All = function() {
 NDT.Var.List = function() {
     return NDT.Var.All().map(v => v.id);
 }
-NDT.Var.Get = function(VarID) {
+NDT.Var.GetFull = function(VarID) {
     ChkType('s', VarID);
     const target = NDT.Spr.ALL.find(s => s.isStage);
     if (!target) {
@@ -238,6 +241,9 @@ NDT.Var.Get = function(VarID) {
     const NAMES = Vars.find(v => v.name === VarID);
     if (NAMES) return NAMES;
     Log('e', `${VarID}というグローバル変数は見つかりませんでした`);
+}
+NDT.Var.Get = function(VarID) {
+    return NDT.Var.GetFull(VarID).value;
 }
 NDT.Var.Set = function(VarID, Value){
     ChkType('s', VarID);

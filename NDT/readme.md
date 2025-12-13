@@ -18,3 +18,7 @@ NekoDevToolはScratchVMにある程度簡単にアクセスできるようにな
 NDTは関数を実行するときに一部の引数の型を確認します。  
 型が間違っていた場合エラーを吐きます(処理は止めません)  
 無効にしたい場合は``NDT.Option.DisCheck``を有効にしてください。
+# サンプル
+1. ``NDT.Eve.Flag()`` - 緑の旗を押す
+2. ``NDT.Eve.Stop()`` - すべて停止
+3. ``NDT.Spr.Rename(NDT.Var.Get('hoge'), NDT.Var.Get('hogege'))`` - スプライト名がグローバル変数"hoge"内の値になっているスプライトの名前をグローバル変数"hogege"内の値にする
