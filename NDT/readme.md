@@ -12,6 +12,7 @@ NekoDevToolはScratchVMにある程度簡単にアクセスできるようにな
 - ``NDT.Sprite.Variable`` or ``NDT.Sprite.Var`` - ローカル変数関係。
 - ``NDT.Variable`` or ``NDT.Var`` - グローバル変数関係。
 - ``NDT.Option`` - 設定
+- ``NDT.Info`` - NDTの情報
 # 設定できる項目
 - ``NDT.Option.DisCheck`` - Boolean(真偽値) - 有効にすると実行時型チェックを行わないようになります。軽量化に。
 # 型チェックについて

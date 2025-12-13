@@ -68,7 +68,10 @@ if (typeof vm !== 'undefined') {
 NDT.RT = NDT.VM.runtime;
 
 
-// Option
+// Info/Option
+NDT.Info = {};
+NDT.Info.Ver = '0.0.1';
+NDT.Info.Message = `NDT.Infoを追加`;
 NDT.Option = {};
 NDT.Option.DisCheck = false;
 
