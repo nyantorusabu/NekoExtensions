@@ -54,6 +54,11 @@ async function FileUpload(...exts) {
 		reader.readAsDataURL(file)
 	})
 }
+// ランダムなIDの生成
+const GenerateUid = function() {
+    return Math.random().toString(36).substring(2, 12) +
+        Math.random().toString(36).substring(2, 12);
+};
 
 
 
@@ -73,8 +78,8 @@ NDT.RT = NDT.VM.runtime;
 
 // Info/Option
 NDT.Info = {};
-NDT.Info.Ver = '0.0.8';
-NDT.Info.Message = `導入時ログを残すよう変更`;
+NDT.Info.Ver = '0.0.9';
+NDT.Info.Message = `.Var.Create, .Var.Delete, .List.Create, .List.Deleteを追加`;
 NDT.Option = {};
 NDT.Option.DisCheck = false;
 
@@ -113,6 +118,12 @@ NDT.Spr.Get = function(SprID) {
         }
     }
     return Out;
+}
+NDT.Spr.Runtime = function(SprID) {
+    return NDT.Spr.Get(SprID).runtime;
+}
+NDT.Spr.RT = function(SprID) {
+    return NDT.Spr.Runtime(SprID);
 }
 NDT.Spr.Add = async function(URL) {
     ChkType('s', URL);
@@ -204,6 +215,14 @@ NDT.Spr.Var.Change = function(SprID, VarID, Value) {
 NDT.Spr.Var.Rename = function(SprID, VarID, NewName) {
     NDT.Spr.Var.GetFull(SprID, VarID).name = NewName;
 }
+NDT.Spr.Var.Create = function(SprID, VarName) {
+    const UID = GenerateUid();
+    NDT.Spr.Get(SprID).createVariable(UID, VarName, '');
+}
+NDT.Spr.Var.Delete = function(SprID, VarID) {
+    const ID = NDT.Spr.Var.GetFull(SprID, VarID).id;
+    NDT.Spr.Get(SprID).deleteVariable(ID);
+}
 
 NDT.Spr.List = {};
 NDT.Spr.List.All = function(SprID) {
@@ -240,6 +259,14 @@ NDT.Spr.List.SetArray = function(SprID, VarID, Value) {
     const List = NDT.Spr.List.Get(SprID, VarID);
     List.length = 0;
     List.push(...Value);
+}
+NDT.Spr.List.Create = function(SprID, VarName) {
+    const UID = GenerateUid();
+    NDT.Spr.Get(SprID).createVariable(UID, VarName, 'list');
+}
+NDT.Spr.List.Delete = function(SprID, VarID) {
+    const ID = NDT.Spr.List.GetFull(SprID, VarID).id;
+    NDT.Spr.Get(SprID).deleteVariable(ID);
 }
 NDT.Spr.List.Rename = function(SprID, VarID, NewName) {
     NDT.Spr.List.GetFull(SprID, VarID).name = NewName;
@@ -290,6 +317,18 @@ NDT.Var.Set = function(VarID, Value){
 NDT.Var.Change = function(VarID, Value){
     NDT.Var.GetFull(VarID).value += Value;
 }
+NDT.Var.Create = function(VarName) {
+    NDT.RT.createNewGlobalVariable(VarName);
+}
+NDT.Var.Delete = function(VarID) {
+    ChkType('s', VarID);
+    const SprID = NDT.Spr.All.find(s => s.isStage).id;
+    if (!SprID) {
+        Log('e', 'ステージを発見できませんでした');
+        return;
+    }
+    NDT.Spr.Get(SprID).deleteVariable(NDT.Var.GetFull(VarID).id);
+}
 NDT.Var.Rename = function(VarID, NewName){
     NDT.Var.GetFull(VarID).name = NewName;
 }
@@ -336,6 +375,18 @@ NDT.List.SetArray = function(VarID, Value) {
     const List = NDT.List.Get(VarID);
     List.length = 0;
     List.push(...Value);
+}
+NDT.List.Create = function(VarName) {
+    NDT.RT.createNewGlobalVariable(VarName, undefined, 'list');
+}
+NDT.List.Delete = function(VarID) {
+    ChkType('s', VarID);
+    const SprID = NDT.Spr.All.find(s => s.isStage).id;
+    if (!SprID) {
+        Log('e', 'ステージを発見できませんでした');
+        return;
+    }
+    NDT.Spr.Get(SprID).deleteVariable(NDT.List.GetFull(VarID).id);
 }
 NDT.List.Rename = function(VarID, NewName){
     NDT.List.GetFull(VarID).name = NewName;
