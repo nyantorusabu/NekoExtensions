@@ -276,3 +276,7 @@ NDT.Var.Rename = function(VarID, NewName){
     if (!Var) return;
     NDT.Spr.ALL[Pos].variables[Var.id].name = NewName;
 }
+
+
+// イベント
+document.dispatchEvent(new Event("NDT_Loaded"));
