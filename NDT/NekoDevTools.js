@@ -73,8 +73,8 @@ NDT.RT = NDT.VM.runtime;
 
 // Info/Option
 NDT.Info = {};
-NDT.Info.Ver = '0.0.5';
-NDT.Info.Message = `.NameListを追加`;
+NDT.Info.Ver = '0.0.6';
+NDT.Info.Message = `NDT.List, NDT.Spr.Listを追加`;
 NDT.Option = {};
 NDT.Option.DisCheck = false;
 
@@ -97,18 +97,22 @@ NDT.Event.Message = function(Message) {
 // Sprite
 NDT.Sprite = {};
 NDT.Spr = NDT.Sprite;
-NDT.Spr.ALL = NDT.VM.runtime.targets;
-NDT.Spr.List = NDT.Spr.ALL.map(s => s.id);
-NDT.Spr.NameList = NDT.Spr.ALL.map(s => s.getName());
+NDT.Spr.All = NDT.VM.runtime.targets;
+NDT.Spr.IDList = NDT.Spr.All.map(s => s.id);
+NDT.Spr.NameList = NDT.Spr.All.map(s => s.getName());
 
 NDT.Spr.Get = function(SprID) {
     ChkType('s', SprID);
-    const Sprites = NDT.Spr.ALL;
-    const IDS = Sprites.find(s => s.id === SprID);
-    if (IDS) return IDS;
-    const NAMES = Sprites.find(s => s.getName() === SprID);
-    if (NAMES) return NAMES;
-    Log('e', `${SprID}というスプライトは見つかりませんでした`)
+    const Sprites = NDT.Spr.All;
+    let Out = Sprites.find(s => s.id == SprID);
+    if (!Out) {
+        Out = Sprites.find(s => s.getName() == SprID);
+        if (!Out) {
+            Log('e', `${SprID}というスプライトは見つかりませんでした`);
+            return;
+        }
+    }
+    return Out;
 }
 NDT.Spr.Add = async function(URL) {
     ChkType('s', URL);
@@ -133,8 +137,8 @@ NDT.Spr.Rename = function(SprID, NewName) {
     ChkType('s', NewName);
     const Id = NDT.Spr.Get(SprID).id;
     if (!Id) return;
-    const Pos = NDT.Spr.List.indexOf(Id);
-    NDT.Spr.ALL[Pos].sprite.name = NewName;
+    const Pos = NDT.Spr.IDList.indexOf(Id);
+    NDT.Spr.All[Pos].sprite.name = NewName;
 }
 
 NDT.Spr.Event = {};
@@ -162,22 +166,15 @@ NDT.Spr.Eve.Message = function(SprID, Message) {
 NDT.Spr.Variable = {};
 NDT.Spr.Var = NDT.Spr.Variable;
 NDT.Spr.Var.All = function(SprID) {
-    ChkType('s', SprID);
     const target = NDT.Spr.Get(SprID);
     if (!target) return;
-    return Object.values(target.variables);
+    return Object.values(target.variables).filter(v => v.type == '');
 }
-NDT.Spr.Var.List = function(SprID) {
-    ChkType('s', SprID);
-    const target = NDT.Spr.Get(SprID);
-    if (!target) return;
-    return Object.values(target.variables).map(v => v.id);
+NDT.Spr.Var.IDList = function(SprID) {
+    return NDT.Spr.Var.All(SprID).map(v => v.id);
 }
 NDT.Spr.Var.NameList = function(SprID) {
-    ChkType('s', SprID);
-    const target = NDT.Spr.Get(SprID);
-    if (!target) return;
-    return Object.values(target.variables).map(v => v.name);
+    return NDT.Spr.Var.All(SprID).map(v => v.name);
 }
 NDT.Spr.Var.GetFull = function(SprID, VarID) {
     ChkType('s', SprID);
@@ -185,45 +182,62 @@ NDT.Spr.Var.GetFull = function(SprID, VarID) {
     const target = NDT.Spr.Get(SprID);
     if (!target) return;
     const Vars = Object.values(target.variables);
-    const IDS = Vars.find(v => v.id === VarID);
-    if (IDS) return IDS;
-    const NAMES = Vars.find(v => v.name === VarID);
-    if (NAMES) return NAMES;
-    Log('e', `スプライト${SprID}に${VarID}というローカル変数は見つかりませんでした`);
+    let Out = Vars.find(v => v.id === VarID && v.type == '');
+    if (!Out) {
+        Out = Vars.find(v => v.name === VarID && v.type == '');
+        if (!Out) {
+            Log('e', `スプライト${SprID}に${VarID}というローカル変数は見つかりませんでした`);
+            return;
+        }
+    }
+    return Out;
 }
 NDT.Spr.Var.Get = function(SprID, VarID) {
     return NDT.Spr.Var.GetFull(SprID, VarID,).value;
 }
-NDT.Spr.Variable.Set = function(SprID, VarID, Value) {
-    ChkType('s', SprID);
-    ChkType('s', VarID);
-    const Id = NDT.Spr.Get(SprID).id;
-    if (!Id) return;
-    const Pos = NDT.Spr.List.indexOf(Id);
-    const Var = NDT.Spr.Var.GetFull(SprID, VarID);
-    if (!Var) return;
-    NDT.Spr.ALL[Pos].variables[Var.id].value = Value;
+NDT.Spr.Var.Set = function(SprID, VarID, Value) {
+    NDT.Spr.Var.GetFull(SprID, VarID).value = Value;
 }
-NDT.Spr.Variable.Add = function(SprID, VarID, Value) {
-    ChkType('s', SprID);
-    ChkType('s', VarID);
-    const Id = NDT.Spr.Get(SprID).id;
-    if (!Id) return;
-    const Pos = NDT.Spr.List.indexOf(Id);
-    const Var = NDT.Spr.Var.GetFull(SprID, VarID);
-    if (!Var) return;
-    NDT.Spr.ALL[Pos].variables[Var.id].value += Value;
+NDT.Spr.Var.Change = function(SprID, VarID, Value) {
+    NDT.Spr.Var.GetFull(SprID, VarID).value += Value;
 }
-NDT.Spr.Variable.Rename = function(SprID, VarID, NewName) {
+NDT.Spr.Var.Rename = function(SprID, VarID, NewName) {
+    NDT.Spr.Var.GetFull(SprID, VarID).name = NewName;
+}
+
+NDT.Spr.List = {};
+NDT.Spr.List.All = function(SprID) {
+    const target = NDT.Spr.Get(SprID);
+    if (!target) return;
+    return Object.values(target.variables).filter(v => v.type == 'list');
+}
+NDT.Spr.List.IDList = function(SprID) {
+    return NDT.Spr.List.All(SprID).map(v => v.id);
+}
+NDT.Spr.List.NameList = function(SprID) {
+    return NDT.Spr.List.All(SprID).map(v => v.name);
+}
+NDT.Spr.List.GetFull = function(SprID, VarID) {
     ChkType('s', SprID);
     ChkType('s', VarID);
-    ChkType('s', NewName);
-    const Id = NDT.Spr.Get(SprID).id;
-    if (!Id) return;
-    const Pos = NDT.Spr.List.indexOf(Id);
-    const Var = NDT.Spr.Var.GetFull(SprID, VarID);
-    if (!Var) return;
-    NDT.Spr.ALL[Pos].variables[Var.id].name = NewName;
+    const target = NDT.Spr.Get(SprID);
+    if (!target) return;
+    const Vars = Object.values(target.variables);
+    let Out = Vars.find(v => v.id === VarID && v.type == 'list');
+    if (!Out) {
+        Out = Vars.find(v => v.name === VarID && v.type == 'list');
+        if (!Out) {
+            Log('e', `スプライト${SprID}に${VarID}というローカルリストは見つかりませんでした`);
+            return;
+        }
+    }
+    return Out;
+}
+NDT.Spr.List.Get = function(SprID, VarID) {
+    return NDT.Spr.List.GetFull(SprID, VarID,).value;
+}
+NDT.Spr.List.Rename = function(SprID, VarID, NewName) {
+    NDT.Spr.List.GetFull(SprID, VarID).name = NewName;
 }
 
 
@@ -231,14 +245,14 @@ NDT.Spr.Variable.Rename = function(SprID, VarID, NewName) {
 NDT.Variable = {};
 NDT.Var = NDT.Variable;
 NDT.Var.All = function() {
-    const SprID = NDT.Spr.ALL.find(s => s.isStage).id;
+    const SprID = NDT.Spr.All.find(s => s.isStage).id;
     if (!SprID) {
         Log('e', 'ステージを発見できませんでした');
         return;
     }
-    return Object.values(NDT.Spr.Var.All(SprID));
+    return NDT.Spr.Var.All(SprID);
 }
-NDT.Var.List = function() {
+NDT.Var.IDList = function() {
     return NDT.Var.All().map(v => v.id);
 }
 NDT.Var.NameList = function() {
@@ -246,57 +260,75 @@ NDT.Var.NameList = function() {
 }
 NDT.Var.GetFull = function(VarID) {
     ChkType('s', VarID);
-    const target = NDT.Spr.ALL.find(s => s.isStage);
+    const target = NDT.Spr.All.find(s => s.isStage);
     if (!target) {
         Log('e', 'ステージを発見できませんでした');
         return;
     }
     const Vars = Object.values(target.variables);
-    const IDS = Vars.find(v => v.id === VarID);
-    if (IDS) return IDS;
-    const NAMES = Vars.find(v => v.name === VarID);
-    if (NAMES) return NAMES;
-    Log('e', `${VarID}というグローバル変数は見つかりませんでした`);
+    let Out = Vars.find(v => v.id === VarID && v.type == '');
+    if (!Out) {
+        Out = Vars.find(v => v.name === VarID && v.type == '');
+        if (!Out) {
+            Log('e', `${VarID}というグローバル変数は見つかりませんでした`);
+            return;
+        }
+    }
+    return Out;
 }
 NDT.Var.Get = function(VarID) {
     return NDT.Var.GetFull(VarID).value;
 }
 NDT.Var.Set = function(VarID, Value){
-    ChkType('s', VarID);
-    const SprID = NDT.Spr.ALL.find(s => s.isStage).id;
-    if (!SprID) {
-        Log('e', 'ステージを発見できませんでした');
-        return;
-    }
-    const Pos = NDT.Spr.List.indexOf(SprID);
-    const Var = NDT.Var.GetFull(VarID);
-    if (!Var) return;
-    NDT.Spr.ALL[Pos].variables[Var.id].value = Value;
+    NDT.Var.GetFull(VarID).value = Value;
 }
-NDT.Var.Add = function(VarID, Value){
-    ChkType('s', VarID);
-    const SprID = NDT.Spr.ALL.find(s => s.isStage).id;
-    if (!SprID) {
-        Log('e', 'ステージを発見できませんでした');
-        return;
-    }
-    const Pos = NDT.Spr.List.indexOf(SprID);
-    const Var = NDT.Var.GetFull(VarID);
-    if (!Var) return;
-    NDT.Spr.ALL[Pos].variables[Var.id].value += Value;
+NDT.Var.Change = function(VarID, Value){
+    NDT.Var.GetFull(VarID).value += Value;
 }
 NDT.Var.Rename = function(VarID, NewName){
-    ChkType('s', VarID);
-    ChkType('s', NewName);
-    const SprID = NDT.Spr.ALL.find(s => s.isStage).id;
+    NDT.Var.GetFull(VarID).name = NewName;
+}
+
+
+// List
+NDT.List = {};
+NDT.List.All = function() {
+    const SprID = NDT.Spr.All.find(s => s.isStage).id;
     if (!SprID) {
         Log('e', 'ステージを発見できませんでした');
         return;
     }
-    const Pos = NDT.Spr.List.indexOf(SprID);
-    const Var = NDT.Var.GetFull(VarID);
-    if (!Var) return;
-    NDT.Spr.ALL[Pos].variables[Var.id].name = NewName;
+    return NDT.Spr.List.All(SprID);
+}
+NDT.List.IDList = function() {
+    return NDT.List.All().map(v => v.id);
+}
+NDT.List.NameList = function() {
+    return NDT.List.All().map(v => v.name);
+}
+NDT.List.GetFull = function(VarID) {
+    ChkType('s', VarID);
+    const target = NDT.Spr.All.find(s => s.isStage);
+    if (!target) {
+        Log('e', 'ステージを発見できませんでした');
+        return;
+    }
+    const Vars = Object.values(target.variables);
+    let Out = Vars.find(v => v.id === VarID && v.type == 'list');
+    if (!Out) {
+        Out = Vars.find(v => v.name === VarID && v.type == 'list');
+        if (!Out) {
+            Log('e', `${VarID}というグローバルリストは見つかりませんでした`);
+            return;
+        }
+    }
+    return Out;
+}
+NDT.List.Get = function(VarID) {
+    return NDT.List.GetFull(VarID).value;
+}
+NDT.List.Rename = function(VarID, NewName){
+    NDT.List.GetFull(VarID).name = NewName;
 }
 
 
