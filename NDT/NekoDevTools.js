@@ -70,8 +70,8 @@ NDT.RT = NDT.VM.runtime;
 
 // Info/Option
 NDT.Info = {};
-NDT.Info.Ver = '0.0.2';
-NDT.Info.Message = `NDT.Spr.Var.GetFullが動作していなかった問題を修正`;
+NDT.Info.Ver = '0.0.3';
+NDT.Info.Message = `Var全般が動作していなかった問題を修正`;
 NDT.Option = {};
 NDT.Option.DisCheck = false;
 
@@ -190,7 +190,7 @@ NDT.Spr.Variable.Set = function(SprID, VarID, Value) {
     const Id = NDT.Spr.Get(SprID).id;
     if (!Id) return;
     const Pos = NDT.Spr.List.indexOf(Id);
-    const Var = NDT.Spr.Var.Get(SprID, VarID);
+    const Var = NDT.Spr.Var.GetFull(SprID, VarID);
     if (!Var) return;
     NDT.Spr.ALL[Pos].variables[Var.id].value = Value;
 }
@@ -200,7 +200,7 @@ NDT.Spr.Variable.Add = function(SprID, VarID, Value) {
     const Id = NDT.Spr.Get(SprID).id;
     if (!Id) return;
     const Pos = NDT.Spr.List.indexOf(Id);
-    const Var = NDT.Spr.Var.Get(SprID, VarID);
+    const Var = NDT.Spr.Var.GetFull(SprID, VarID);
     if (!Var) return;
     NDT.Spr.ALL[Pos].variables[Var.id].value += Value;
 }
@@ -211,7 +211,7 @@ NDT.Spr.Variable.Rename = function(SprID, VarID, NewName) {
     const Id = NDT.Spr.Get(SprID).id;
     if (!Id) return;
     const Pos = NDT.Spr.List.indexOf(Id);
-    const Var = NDT.Spr.Var.Get(SprID, VarID);
+    const Var = NDT.Spr.Var.GetFull(SprID, VarID);
     if (!Var) return;
     NDT.Spr.ALL[Pos].variables[Var.id].name = NewName;
 }
@@ -256,7 +256,7 @@ NDT.Var.Set = function(VarID, Value){
         return;
     }
     const Pos = NDT.Spr.List.indexOf(SprID);
-    const Var = NDT.Var.Get(VarID);
+    const Var = NDT.Var.GetFull(VarID);
     if (!Var) return;
     NDT.Spr.ALL[Pos].variables[Var.id].value = Value;
 }
@@ -268,7 +268,7 @@ NDT.Var.Add = function(VarID, Value){
         return;
     }
     const Pos = NDT.Spr.List.indexOf(SprID);
-    const Var = NDT.Var.Get(VarID);
+    const Var = NDT.Var.GetFull(VarID);
     if (!Var) return;
     NDT.Spr.ALL[Pos].variables[Var.id].value += Value;
 }
@@ -281,7 +281,7 @@ NDT.Var.Rename = function(VarID, NewName){
         return;
     }
     const Pos = NDT.Spr.List.indexOf(SprID);
-    const Var = NDT.Var.Get(VarID);
+    const Var = NDT.Var.GetFull(VarID);
     if (!Var) return;
     NDT.Spr.ALL[Pos].variables[Var.id].name = NewName;
 }
