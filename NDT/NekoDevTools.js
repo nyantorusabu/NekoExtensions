@@ -73,8 +73,8 @@ NDT.RT = NDT.VM.runtime;
 
 // Info/Option
 NDT.Info = {};
-NDT.Info.Ver = '0.0.6';
-NDT.Info.Message = `NDT.List, NDT.Spr.Listを追加`;
+NDT.Info.Ver = '0.0.7';
+NDT.Info.Message = `.List.SetArrayを追加`;
 NDT.Option = {};
 NDT.Option.DisCheck = false;
 
@@ -236,6 +236,11 @@ NDT.Spr.List.GetFull = function(SprID, VarID) {
 NDT.Spr.List.Get = function(SprID, VarID) {
     return NDT.Spr.List.GetFull(SprID, VarID,).value;
 }
+NDT.Spr.List.SetArray = function(SprID, VarID, Value) {
+    const List = NDT.Spr.List.Get(SprID, VarID);
+    List.length = 0;
+    List.push(...Value);
+}
 NDT.Spr.List.Rename = function(SprID, VarID, NewName) {
     NDT.Spr.List.GetFull(SprID, VarID).name = NewName;
 }
@@ -326,6 +331,11 @@ NDT.List.GetFull = function(VarID) {
 }
 NDT.List.Get = function(VarID) {
     return NDT.List.GetFull(VarID).value;
+}
+NDT.List.SetArray = function(VarID, Value) {
+    const List = NDT.List.Get(VarID);
+    List.length = 0;
+    List.push(...Value);
 }
 NDT.List.Rename = function(VarID, NewName){
     NDT.List.GetFull(VarID).name = NewName;
