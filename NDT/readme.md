@@ -1,7 +1,7 @@
 **注意: これは拡張機能ではありません**  
-# NekoDevTool
-NekoDevToolはScratchVMにある程度簡単にアクセスできるようになる何かです。  
-バニラでも使えるしTurboWarpのようなMod環境でも多分使えます。  
+# NekoDevTools
+NekoDevTools(NDT)はScratchVMにある程度簡単にアクセスできるようになる何かです。  
+バニラでも**多分**使えるしTurboWarpのようなMod環境でも**多分**使えます。  
 コンソールなどでNDTを実行後``NDT``でアクセスできます。  
 詳しい使い方はやる気が出たら書きます。  
 # 現在使えるもの
