@@ -78,8 +78,8 @@ NDT.RT = NDT.VM.runtime;
 
 // Info/Option
 NDT.Info = {};
-NDT.Info.Ver = '0.0.10';
-NDT.Info.Message = `.Spr.GetFullを追加(機能は.Getと同じです)`;
+NDT.Info.Ver = '0.0.11';
+NDT.Info.Message = `.Spr.Removeを.Spr.Deleteに変更`;
 NDT.Option = {};
 NDT.Option.DisCheck = false;
 
@@ -141,7 +141,7 @@ NDT.Spr.Add = async function(URL) {
 NDT.Spr.Upload = async function() {
     NDT.Spr.Add(await FileUpload('.sprite3'));
 }
-NDT.Spr.Remove = function(SprID) {
+NDT.Spr.Delete = function(SprID) {
     ChkType('s', SprID);
     const Id = NDT.Spr.Get(SprID).id;
     NDT.VM.deleteSprite(SprID);
