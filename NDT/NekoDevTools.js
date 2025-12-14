@@ -78,8 +78,8 @@ NDT.RT = NDT.VM.runtime;
 
 // Info/Option
 NDT.Info = {};
-NDT.Info.Ver = '0.0.11';
-NDT.Info.Message = `.Spr.Removeを.Spr.Deleteに変更`;
+NDT.Info.Ver = '0.0.12';
+NDT.Info.Message = `スプライト関係を色々追加`;
 NDT.Option = {};
 NDT.Option.DisCheck = false;
 
@@ -106,7 +106,7 @@ NDT.Spr.All = NDT.VM.runtime.targets;
 NDT.Spr.IDList = NDT.Spr.All.map(s => s.id);
 NDT.Spr.NameList = NDT.Spr.All.map(s => s.getName());
 
-NDT.Spr.GetFull = function(SprID) {
+NDT.Spr.Get = function(SprID) {
     ChkType('s', SprID);
     const Sprites = NDT.Spr.All;
     let Out = Sprites.find(s => s.id == SprID);
@@ -118,9 +118,6 @@ NDT.Spr.GetFull = function(SprID) {
         }
     }
     return Out;
-}
-NDT.Spr.Get = function(SprID) {
-    return NDT.Spr.GetFull(SprID);
 }
 NDT.Spr.Runtime = function(SprID) {
     return NDT.Spr.Get(SprID).runtime;
@@ -153,6 +150,66 @@ NDT.Spr.Rename = function(SprID, NewName) {
     if (!Id) return;
     const Pos = NDT.Spr.IDList.indexOf(Id);
     NDT.Spr.All[Pos].sprite.name = NewName;
+}
+NDT.Spr.Visible = function(SprID, Show = null;) {
+    const Spr = NDT.Spr.Get(SprID);
+    if (!Spr) return;
+    if (Show) {
+        Spr.visible = Show;
+    }
+    return Spr.visible;
+},
+NDT.Spr.Size = function(SprID, ToSize = null;) {
+    const Spr = NDT.Spr.Get(SprID);
+    if (!Spr) return;
+    if (ToSize) {
+        Spr.size = ToSize;
+    }
+    return Spr.size;
+}
+
+NDT.Spr.Position = {};
+NDT.Spr.Pos = NDT.Spr.Position;
+NDT.Spr.Pos.Get = function(SprID) {
+    const Spr = NDT.Spr.Get(SprID);
+    if (!Spr) return;
+    return { x: Spr.x, y: Spr.y, Dir: Spr.direction };
+}
+NDT.Spr.Pos.Goto = function(SprID, ToX = null, ToY = null) {
+    const Spr = NDT.Spr.Get(SprID);
+    if (!Spr) return;
+    if (ToX) Spr.x = ToX;
+    if (ToY) Spr.y = ToY;
+    return { x: Spr.x, y: Spr.y };
+}
+NDT.Spr.Pos.MoveXY = function(SprID, StepX = null, StepY = null) {
+    const Spr = NDT.Spr.Get(SprID);
+    if (!Spr) return;
+    if (StepX) Spr.x += StepX;
+    if (StepY) Spr.y += StepY;
+    return { x: Spr.x, y: Spr.y };
+}
+NDT.Spr.Pos.Move = function(SprID, Steps) {
+    const Spr = NDT.Spr.Get(SprID);
+    if (!Spr) return;
+    const Radians = Math.PI / 180 * (90 - Spr.direction);
+    const StepX = Steps * Math.cos(Radians);
+    const StepY = Steps * Math.sin(Radians);
+    Spr.x += StepX;
+    Spr.y += StepY;
+    return { x: Spr.x, y: Spr.y };
+}
+NDT.Spr.Pos.SetDir = function(SprID, Dir) {
+    const Spr = NDT.Spr.Get(SprID);
+    if (!Spr) return;
+    if (Dir) Spr.direction = Dir;
+    return { Dir: direction };
+}
+NDT.Spr.Pos.Turn = function(SprID, Dir) {
+    const Spr = NDT.Spr.Get(SprID);
+    if (!Spr) return;
+    if (Dir) Spr.direction += Dir;
+    return { Dir: direction };
 }
 
 NDT.Spr.Event = {};
