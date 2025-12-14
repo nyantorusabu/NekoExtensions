@@ -18,8 +18,8 @@ NDT.RT = NDT.VM.runtime;
 
 // Info/Option
 NDT.Info = {};
-NDT.Info.Ver = '0.0.16';
-NDT.Info.Message = `別のプロジェクトを読み込んだ時NDT.Sprite.Allが更新されなかった問題を修正`;
+NDT.Info.Ver = '0.0.17';
+NDT.Info.Message = `スプライトを更新した時NDT.Sprite.Allが更新されなかった問題を修正`;
 NDT.Option = {};
 NDT.Option.DisCheck = false;
 
@@ -49,6 +49,9 @@ NDT.Reload = function() {
 }
 NDT.Reload();
 NDT.RT.on('PROJECT_LOADED', () => {
+    NDT.Reload();
+});
+NDT.VM.addListener('targetsUpdate', (data) => {
     NDT.Reload();
 });
 
