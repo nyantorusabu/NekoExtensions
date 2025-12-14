@@ -1,3 +1,4 @@
+(function() {
 // 色々使う関数
 // 短縮表現変換
 function Abbreviation(code, ...link) {
@@ -55,7 +56,7 @@ async function FileUpload(...exts) {
 	})
 }
 // ランダムなIDの生成
-const GenerateUid = function() {
+function GenerateUid() {
     return Math.random().toString(36).substring(2, 12) +
         Math.random().toString(36).substring(2, 12);
 };
@@ -457,3 +458,4 @@ NDT.List.Rename = function(VarID, NewName){
 document.dispatchEvent(new Event("NDT_Loaded"));
 Log('l', `NDT V${NDT.Info.Ver} is Loaded.`);
 Log('l', `Update:\n${NDT.Info.Message}`)
+})();
