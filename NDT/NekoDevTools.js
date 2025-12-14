@@ -78,8 +78,8 @@ NDT.RT = NDT.VM.runtime;
 
 // Info/Option
 NDT.Info = {};
-NDT.Info.Ver = '0.0.13';
-NDT.Info.Message = `構文エラーを修正`;
+NDT.Info.Ver = '0.0.14';
+NDT.Info.Message = `起動時最後の更新内容を表示するように変更`;
 NDT.Option = {};
 NDT.Option.DisCheck = false;
 
@@ -456,3 +456,4 @@ NDT.List.Rename = function(VarID, NewName){
 // イベント
 document.dispatchEvent(new Event("NDT_Loaded"));
 Log('l', `NDT V${NDT.Info.Ver} is Loaded.`);
+Log('l', `Update:\n${NDT.Info.Message}`)
