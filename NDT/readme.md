@@ -23,3 +23,5 @@ NDTは関数を実行するときに一部の引数の型を確認します。
 1. ``NDT.Eve.Flag()`` - 緑の旗を押す
 2. ``NDT.Eve.Stop()`` - すべて停止
 3. ``NDT.Spr.Rename(NDT.Var.Get('hoge'), NDT.Var.Get('hogege'))`` - スプライト名がグローバル変数"hoge"内の値になっているスプライトの名前をグローバル変数"hogege"内の値にする
+# ライセンス
+NDTはMITライセンスです。改変、配布などなど自由!
