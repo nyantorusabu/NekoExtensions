@@ -3,7 +3,14 @@
 NekoDevTools(NDT)はScratchVMにある程度簡単にアクセスできるようになる何かです。  
 バニラでも**多分**使えるしTurboWarpのようなMod環境でも**多分**使えます。  
 コンソールなどでNDTを実行後``NDT``でアクセスできます。  
-詳しい使い方はやる気が出たら書きます。  
+詳しい使い方はやる気が出たら書きます。
+# 使い方
+下のコードをブックマークして実行するかコンソールから直接実行するとNDTが壊れてなければ起動メッセージが出て起動します。
+```js
+javascript:(function(){if(typeof NDT!=='undefined'){return} const s=document.createElement('script');s.src='https://nyantorusabu.github.io/NekoExtensions/NDT/NekoDevTools.js';document.body.appendChild(s)})();
+```  
+起動しなかったらぁ...Issue立てといてください。  
+Issueの立て方わからんかったらScratchかDiscordで伝えてください。
 # 現在使えるもの
 - ``NDT.VM`` - ScratchVMに直接アクセスできます。
 - ``NDT.RT`` - Runtimeにアクセスできます。ただのショートカット。

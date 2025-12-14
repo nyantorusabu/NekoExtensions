@@ -36,7 +36,7 @@ function ChkType(type, data) {
         'Function'
     )
     if ((typeof data).toLowerCase() !== lstype.toLowerCase()) {
-        Log('e', `引数に指定できない型が指定されています!: 入力=>${typeof data} 要求=>${lstype}`)
+        Log('e', `引数に指定できない型が指定されています!:\n入力=>${typeof data} 要求=>${lstype}`)
     }
 }
 // ファイルのアップロード
