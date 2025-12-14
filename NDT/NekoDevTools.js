@@ -1,69 +1,4 @@
 (function() {
-// 色々使う関数
-// 短縮表現変換
-function Abbreviation(code, ...link) {
-    for (const word of link) {
-        if (code.toLowerCase().startsWith(word.toLowerCase()[0])) {
-            return word;
-        }
-    }
-    Log('w', `引数として想定されていない値が入力されました: ${code}`)
-    return code;
-}
-// ログ
-function Log(type = 'log', output) {
-    const lstype = Abbreviation(
-        type,
-        'log',
-        'warn',
-        'error'
-    )
-    console[lstype](`[NDT] ${output}`)
-}
-// 型チェック
-function ChkType(type, data) {
-    if (NDT.Option.DisCheck) return;
-    const lstype = Abbreviation(
-        type,
-        'Number',
-        'String',
-        'Symbol',
-        'Boolean',
-        'BigInt',
-        'Undefined',
-        'Null',
-        'Object',
-        'Function'
-    )
-    if ((typeof data).toLowerCase() !== lstype.toLowerCase()) {
-        Log('e', `引数に指定できない型が指定されています!:\n入力=>${typeof data} 要求=>${lstype}`)
-    }
-}
-// ファイルのアップロード
-async function FileUpload(...exts) {
-	const [handle] = await window.showOpenFilePicker({
-		types: [{
-			accept: {
-				"*/*": exts
-			}
-		}]
-	});
-	const file = await handle.getFile();
-	const reader = new FileReader();
-	return new Promise(resolve => {
-		reader.onload = e => resolve(e.target.result);
-		reader.readAsDataURL(file)
-	})
-}
-// ランダムなIDの生成
-function GenerateUid() {
-    return Math.random().toString(36).substring(2, 12) +
-        Math.random().toString(36).substring(2, 12);
-};
-
-
-
-// NDT本体
 // ScratchVM
 window.NDT = {};
 if (typeof vm !== 'undefined') {
@@ -79,15 +14,43 @@ NDT.RT = NDT.VM.runtime;
 
 // Info/Option
 NDT.Info = {};
-NDT.Info.Ver = '0.0.15';
-NDT.Info.Message = `Spr.Posで0,0に移動できない問題を修正`;
+NDT.Info.Ver = '0.0.16';
+NDT.Info.Message = `別のプロジェクトを読み込んだ時NDT.Sprite.Allが更新されなかった問題を修正`;
 NDT.Option = {};
 NDT.Option.DisCheck = false;
 
 
-// Event
+// Obj
+NDT.Sprite = {};
+NDT.Spr = NDT.Sprite;
 NDT.Event = {};
 NDT.Eve = NDT.Event;
+NDT.Spr.Position = {};
+NDT.Spr.Pos = NDT.Spr.Position;
+NDT.Spr.Event = {};
+NDT.Spr.Eve = NDT.Spr.Event;
+NDT.Spr.Variable = {};
+NDT.Spr.Var = NDT.Spr.Variable;
+NDT.Spr.List = {};
+NDT.Variable = {};
+NDT.Var = NDT.Variable;
+NDT.List = {};
+
+
+// Reload
+NDT.Reload = function() {
+    NDT.Spr.All = NDT.VM.runtime.targets;
+    NDT.Spr.IDList = NDT.Spr.All.map(s => s.id);
+    NDT.Spr.NameList = NDT.Spr.All.map(s => s.getName());
+}
+NDT.Reload();
+NDT.RT.on('PROJECT_LOADED', () => {
+    NDT.Reload();
+});
+
+
+// NDTMain
+// Event
 NDT.Event.Flag = function() {
     NDT.VM.greenFlag();
 }
@@ -99,14 +62,7 @@ NDT.Event.Message = function(Message) {
     NDT.VM.broadcastMessage(Message);
 }
 
-
 // Sprite
-NDT.Sprite = {};
-NDT.Spr = NDT.Sprite;
-NDT.Spr.All = NDT.VM.runtime.targets;
-NDT.Spr.IDList = NDT.Spr.All.map(s => s.id);
-NDT.Spr.NameList = NDT.Spr.All.map(s => s.getName());
-
 NDT.Spr.Get = function(SprID) {
     ChkType('s', SprID);
     const Sprites = NDT.Spr.All;
@@ -169,8 +125,6 @@ NDT.Spr.Size = function(SprID, ToSize = null) {
     return Spr.size;
 }
 
-NDT.Spr.Position = {};
-NDT.Spr.Pos = NDT.Spr.Position;
 NDT.Spr.Pos.Get = function(SprID) {
     const Spr = NDT.Spr.Get(SprID);
     if (!Spr) return;
@@ -213,8 +167,6 @@ NDT.Spr.Pos.Turn = function(SprID, Dir) {
     return { Dir: direction };
 }
 
-NDT.Spr.Event = {};
-NDT.Spr.Eve = NDT.Spr.Event;
 NDT.Spr.Eve.Flag = function(SprID) {
     ChkType('s', SprID);
     const target = NDT.Spr.Get(SprID);
@@ -235,8 +187,6 @@ NDT.Spr.Eve.Message = function(SprID, Message) {
     NDT.RT.startHats('event_whenbroadcastreceived', { BROADCAST_OPTION: Message }, target);
 }
 
-NDT.Spr.Variable = {};
-NDT.Spr.Var = NDT.Spr.Variable;
 NDT.Spr.Var.All = function(SprID) {
     const target = NDT.Spr.Get(SprID);
     if (!target) return;
@@ -285,7 +235,6 @@ NDT.Spr.Var.Delete = function(SprID, VarID) {
     NDT.Spr.Get(SprID).deleteVariable(ID);
 }
 
-NDT.Spr.List = {};
 NDT.Spr.List.All = function(SprID) {
     const target = NDT.Spr.Get(SprID);
     if (!target) return;
@@ -335,8 +284,6 @@ NDT.Spr.List.Rename = function(SprID, VarID, NewName) {
 
 
 // Variable
-NDT.Variable = {};
-NDT.Var = NDT.Variable;
 NDT.Var.All = function() {
     const SprID = NDT.Spr.All.find(s => s.isStage).id;
     if (!SprID) {
@@ -396,7 +343,6 @@ NDT.Var.Rename = function(VarID, NewName){
 
 
 // List
-NDT.List = {};
 NDT.List.All = function() {
     const SprID = NDT.Spr.All.find(s => s.isStage).id;
     if (!SprID) {
@@ -452,6 +398,69 @@ NDT.List.Delete = function(VarID) {
 NDT.List.Rename = function(VarID, NewName){
     NDT.List.GetFull(VarID).name = NewName;
 }
+
+
+// 色々使う関数
+// 短縮表現変換
+function Abbreviation(code, ...link) {
+    for (const word of link) {
+        if (code.toLowerCase().startsWith(word.toLowerCase()[0])) {
+            return word;
+        }
+    }
+    Log('w', `引数として想定されていない値が入力されました: ${code}`)
+    return code;
+}
+// ログ
+function Log(type = 'log', output) {
+    const lstype = Abbreviation(
+        type,
+        'log',
+        'warn',
+        'error'
+    )
+    console[lstype](`[NDT] ${output}`)
+}
+// 型チェック
+function ChkType(type, data) {
+    if (NDT.Option.DisCheck) return;
+    const lstype = Abbreviation(
+        type,
+        'Number',
+        'String',
+        'Symbol',
+        'Boolean',
+        'BigInt',
+        'Undefined',
+        'Null',
+        'Object',
+        'Function'
+    )
+    if ((typeof data).toLowerCase() !== lstype.toLowerCase()) {
+        Log('e', `引数に指定できない型が指定されています!:\n入力=>${typeof data} 要求=>${lstype}`)
+    }
+}
+// ファイルのアップロード
+async function FileUpload(...exts) {
+	const [handle] = await window.showOpenFilePicker({
+		types: [{
+			accept: {
+				"*/*": exts
+			}
+		}]
+	});
+	const file = await handle.getFile();
+	const reader = new FileReader();
+	return new Promise(resolve => {
+		reader.onload = e => resolve(e.target.result);
+		reader.readAsDataURL(file)
+	})
+}
+// ランダムなIDの生成
+function GenerateUid() {
+    return Math.random().toString(36).substring(2, 12) +
+        Math.random().toString(36).substring(2, 12);
+};
 
 
 // イベント
