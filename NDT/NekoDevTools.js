@@ -78,8 +78,8 @@ NDT.RT = NDT.VM.runtime;
 
 // Info/Option
 NDT.Info = {};
-NDT.Info.Ver = '0.0.14';
-NDT.Info.Message = `起動時最後の更新内容を表示するように変更`;
+NDT.Info.Ver = '0.0.15';
+NDT.Info.Message = `Spr.Posで0,0に移動できない問題を修正`;
 NDT.Option = {};
 NDT.Option.DisCheck = false;
 
@@ -154,7 +154,7 @@ NDT.Spr.Rename = function(SprID, NewName) {
 NDT.Spr.Visible = function(SprID, Show = null) {
     const Spr = NDT.Spr.Get(SprID);
     if (!Spr) return;
-    if (Show) {
+    if (Show !== null) {
         Spr.visible = Show;
     }
     return Spr.visible;
@@ -162,7 +162,7 @@ NDT.Spr.Visible = function(SprID, Show = null) {
 NDT.Spr.Size = function(SprID, ToSize = null) {
     const Spr = NDT.Spr.Get(SprID);
     if (!Spr) return;
-    if (ToSize) {
+    if (ToSize !== null) {
         Spr.size = ToSize;
     }
     return Spr.size;
@@ -178,15 +178,15 @@ NDT.Spr.Pos.Get = function(SprID) {
 NDT.Spr.Pos.Goto = function(SprID, ToX = null, ToY = null) {
     const Spr = NDT.Spr.Get(SprID);
     if (!Spr) return;
-    if (ToX) Spr.x = ToX;
-    if (ToY) Spr.y = ToY;
+    if (ToX !== null) Spr.x = ToX;
+    if (ToY !== null) Spr.y = ToY;
     return { x: Spr.x, y: Spr.y };
 }
 NDT.Spr.Pos.MoveXY = function(SprID, StepX = null, StepY = null) {
     const Spr = NDT.Spr.Get(SprID);
     if (!Spr) return;
-    if (StepX) Spr.x += StepX;
-    if (StepY) Spr.y += StepY;
+    if (StepX !== null) Spr.x += StepX;
+    if (StepY !== null) Spr.y += StepY;
     return { x: Spr.x, y: Spr.y };
 }
 NDT.Spr.Pos.Move = function(SprID, Steps) {
@@ -199,10 +199,10 @@ NDT.Spr.Pos.Move = function(SprID, Steps) {
     Spr.y += StepY;
     return { x: Spr.x, y: Spr.y };
 }
-NDT.Spr.Pos.SetDir = function(SprID, Dir) {
+NDT.Spr.Pos.SetDir = function(SprID, Dir = null) {
     const Spr = NDT.Spr.Get(SprID);
     if (!Spr) return;
-    if (Dir) Spr.direction = Dir;
+    if (Dir !== null) Spr.direction = Dir;
     return { Dir: direction };
 }
 NDT.Spr.Pos.Turn = function(SprID, Dir) {
