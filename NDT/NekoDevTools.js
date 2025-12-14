@@ -3,11 +3,15 @@
 window.NDT = {};
 if (typeof vm !== 'undefined') {
     NDT.VM = vm;
-} else {
+} else if(document.getElementById('app')) {
     NDT.VM = Object.values(document.getElementById('app'))[0].child.updateQueue.lastEffect.deps[1].scratchGui.vm;
+} else {
+    NDT.VM = null;
 }
 if (!NDT.VM) {
     Log('e', 'ScratchVMへのアクセスに失敗しました!\nScratchVMの仕様が変更された可能性があります');
+    NDT = undefined;
+    return;
 }
 NDT.RT = NDT.VM.runtime;
 
