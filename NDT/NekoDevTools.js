@@ -78,8 +78,8 @@ NDT.RT = NDT.VM.runtime;
 
 // Info/Option
 NDT.Info = {};
-NDT.Info.Ver = '0.0.12';
-NDT.Info.Message = `スプライト関係を色々追加`;
+NDT.Info.Ver = '0.0.13';
+NDT.Info.Message = `構文エラーを修正`;
 NDT.Option = {};
 NDT.Option.DisCheck = false;
 
@@ -151,7 +151,7 @@ NDT.Spr.Rename = function(SprID, NewName) {
     const Pos = NDT.Spr.IDList.indexOf(Id);
     NDT.Spr.All[Pos].sprite.name = NewName;
 }
-NDT.Spr.Visible = function(SprID, Show = null;) {
+NDT.Spr.Visible = function(SprID, Show = null) {
     const Spr = NDT.Spr.Get(SprID);
     if (!Spr) return;
     if (Show) {
@@ -159,7 +159,7 @@ NDT.Spr.Visible = function(SprID, Show = null;) {
     }
     return Spr.visible;
 },
-NDT.Spr.Size = function(SprID, ToSize = null;) {
+NDT.Spr.Size = function(SprID, ToSize = null) {
     const Spr = NDT.Spr.Get(SprID);
     if (!Spr) return;
     if (ToSize) {
