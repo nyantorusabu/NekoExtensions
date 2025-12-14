@@ -78,8 +78,8 @@ NDT.RT = NDT.VM.runtime;
 
 // Info/Option
 NDT.Info = {};
-NDT.Info.Ver = '0.0.9';
-NDT.Info.Message = `.Var.Create, .Var.Delete, .List.Create, .List.Deleteを追加`;
+NDT.Info.Ver = '0.0.10';
+NDT.Info.Message = `.Spr.GetFullを追加(機能は.Getと同じです)`;
 NDT.Option = {};
 NDT.Option.DisCheck = false;
 
@@ -106,7 +106,7 @@ NDT.Spr.All = NDT.VM.runtime.targets;
 NDT.Spr.IDList = NDT.Spr.All.map(s => s.id);
 NDT.Spr.NameList = NDT.Spr.All.map(s => s.getName());
 
-NDT.Spr.Get = function(SprID) {
+NDT.Spr.GetFull = function(SprID) {
     ChkType('s', SprID);
     const Sprites = NDT.Spr.All;
     let Out = Sprites.find(s => s.id == SprID);
@@ -118,6 +118,9 @@ NDT.Spr.Get = function(SprID) {
         }
     }
     return Out;
+}
+NDT.Spr.Get = function(SprID) {
+    return NDT.Spr.GetFull(SprID);
 }
 NDT.Spr.Runtime = function(SprID) {
     return NDT.Spr.Get(SprID).runtime;
