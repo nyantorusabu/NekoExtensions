@@ -1,4 +1,6 @@
 (function() {
+if (window.NDT) return;
+
 // ScratchVM
 window.NDT = {};
 if (typeof vm !== 'undefined') {
@@ -18,10 +20,11 @@ NDT.RT = NDT.VM.runtime;
 
 // Info/Option
 NDT.Info = {};
-NDT.Info.Ver = '0.0.17';
-NDT.Info.Message = `スプライトを更新した時NDT.Sprite.Allが更新されなかった問題を修正`;
+NDT.Info.Ver = '0.0.18';
+NDT.Info.Message = `NDT.NDTEventを追加`;
 NDT.Option = {};
 NDT.Option.DisCheck = false;
+NDT.Option.DisStepEvent = false;
 
 
 // Obj
@@ -55,6 +58,31 @@ NDT.VM.addListener('targetsUpdate', (data) => {
     NDT.Reload();
 });
 
+
+// NDTEvent
+const Eve = new EventTarget();
+NDT.NDTEvent = {};
+NDT.NDTEvent.Add = function(name, handler) {
+    Eve.addEventListener(name, handler);
+};
+
+NDT.NDTEvent.Remove = function(name, handler) {
+    Eve.removeEventListener(name, handler);
+};
+
+NDT.NDTEvent.Dispatch = function(name) {
+    Eve.dispatchEvent(new Event(name));
+};
+NDT.Step = NDT.RT._step;
+NDT.RT._step = function() {
+    if (NDT.Option.DisStepEvent) {
+        NDT.Step.call(this);
+        return;
+    }
+    NDT.NDTEvent.Dispatch('StepBefore');
+    NDT.Step.call(this);
+    NDT.NDTEvent.Dispatch('StepAfter');
+}
 
 // NDTMain
 // Event
@@ -171,7 +199,7 @@ NDT.Spr.Pos.Turn = function(SprID, Dir) {
     const Spr = NDT.Spr.Get(SprID);
     if (!Spr) return;
     if (Dir) Spr.direction += Dir;
-    return { Dir: direction };
+    return { Dir: Spr.direction };
 }
 
 NDT.Spr.Eve.Flag = function(SprID) {
