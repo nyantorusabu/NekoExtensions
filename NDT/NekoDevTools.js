@@ -20,11 +20,11 @@ NDT.RT = NDT.VM.runtime;
 
 // Info/Option
 NDT.Info = {};
-NDT.Info.Ver = '0.0.18';
-NDT.Info.Message = `NDT.NDTEventを追加`;
+NDT.Info.Ver = '0.0.19';
+NDT.Info.Message = `ハット関係のNDTEventを追加`;
 NDT.Option = {};
 NDT.Option.DisCheck = false;
-NDT.Option.DisStepEvent = false;
+NDT.Option.DisNDTEvent = false;
 
 
 // Obj
@@ -60,29 +60,67 @@ NDT.VM.addListener('targetsUpdate', (data) => {
 
 
 // NDTEvent
-const Eve = new EventTarget();
+NDT.SC = {};
+
+class NDTEvent extends Event {
+	constructor(EveID, Args = {}) {
+		super(EveID);
+        for(const [k, v] of Object.entries(Args)) {
+            this[k] = v;
+        }
+	}
+}
+
 NDT.NDTEvent = {};
 NDT.NEve = NDT.NDTEvent;
+const Eve = new EventTarget();
 NDT.NDTEvent.Add = function(name, handler) {
     Eve.addEventListener(name, handler);
 };
-
 NDT.NDTEvent.Remove = function(name, handler) {
     Eve.removeEventListener(name, handler);
 };
-
-NDT.NDTEvent.Dispatch = function(name) {
-    Eve.dispatchEvent(new Event(name));
+NDT.NDTEvent.Dispatch = function(EveID, Args = {}) {
+    if (NDT.Option.DisNDTEvent) return;
+    Eve.dispatchEvent(new NDTEvent(EveID, Args));
 };
-NDT.Step = NDT.RT._step;
+
+function NDTValiable() {
+    if (!NDT.Spr.NameList.includes('NDT')) return;
+	const Spr = NDT.Spr.Get('NDT');
+	const List = NDT.Spr.Var.NameList('NDT');
+	const Vars = {
+		Active: 1,
+		Ver: NDT.Info.Ver,
+		Update: NDT.Info.Message,
+	}
+	for (const [VarID, Value] of Object.entries(Vars)) {
+		if (!List.includes(VarID)) NDT.Spr.Var.Create('NDT', VarID);
+		if (NDT.Spr.Var.Get('NDT', VarID) !== Value) NDT.Spr.Var.Set('NDT', VarID, Value);
+	}
+}
+
+NDT.SC.Step = NDT.RT._step;
 NDT.RT._step = function() {
-    if (NDT.Option.DisStepEvent) {
-        NDT.Step.call(this);
-        return;
-    }
+    NDTValiable();
     NDT.NDTEvent.Dispatch('STEP_BEFORE');
-    NDT.Step.call(this);
+    NDT.SC.Step.call(this);
     NDT.NDTEvent.Dispatch('STEP_AFTER');
+}
+
+NDT.SC.StartHats = NDT.RT.startHats;
+NDT.RT.startHats = function(HatOpc, Option, Target) {
+    if (NDT.Option.DisNDTEvent) return NDT.SC.StartHats.call(this, HatOpc, Option, Target);
+    const HatID = HatOpc.toUpperCase();
+    const SprID = Target?.id || NDT.RT.getTargetForStage().id;
+    const Mes = (HatID == 'EVENT_WHENBROADCASTRECEIVED');
+    const Eve = NDT.NDTEvent.Dispatch;
+    if (Mes) Eve('MESSAGE_BEFORE', {MesID: Option.BROADCAST_OPTION, SprID: SprID})
+    Eve(`HAT_BEFORE`, {HatID: HatID, Option: Option, SprID: SprID });
+    const Res = NDT.SC.StartHats.call(this, HatOpc, Option, Target);
+    if (Mes) Eve('MESSAGE_AFTER', {MesID: Option.BROADCAST_OPTION, SprID: SprID})
+    Eve(`HAT_AFTER`, {HatID: HatID, Option: Option, SprID: SprID });
+    return Res;
 }
 
 // NDTMain
@@ -95,7 +133,7 @@ NDT.Event.Stop = function() {
 }
 NDT.Event.Message = function(Message) {
     ChkType('s', Message);
-    NDT.VM.broadcastMessage(Message);
+    startHats("event_whenbroadcastreceived", { BROADCAST_OPTION: Message} );
 }
 
 // Sprite
