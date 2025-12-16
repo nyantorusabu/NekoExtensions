@@ -62,6 +62,7 @@ NDT.VM.addListener('targetsUpdate', (data) => {
 // NDTEvent
 const Eve = new EventTarget();
 NDT.NDTEvent = {};
+NDT.NEve = NDT.NDTEvent;
 NDT.NDTEvent.Add = function(name, handler) {
     Eve.addEventListener(name, handler);
 };
@@ -79,9 +80,9 @@ NDT.RT._step = function() {
         NDT.Step.call(this);
         return;
     }
-    NDT.NDTEvent.Dispatch('StepBefore');
+    NDT.NDTEvent.Dispatch('STEP_BEFORE');
     NDT.Step.call(this);
-    NDT.NDTEvent.Dispatch('StepAfter');
+    NDT.NDTEvent.Dispatch('STEP_AFTER');
 }
 
 // NDTMain

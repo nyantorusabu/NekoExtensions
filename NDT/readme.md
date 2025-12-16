@@ -18,14 +18,23 @@ Issueの立て方わからんかったらScratchかDiscordで伝えてくださ�
 - ``NDT.Sprite`` or ``NDT.Spr`` - スプライト関係。
 - ``NDT.Sprite.Variable`` or ``NDT.Sprite.Var`` - ローカル変数関係。
 - ``NDT.Variable`` or ``NDT.Var`` - グローバル変数関係。
+- ``NDT.NDTEvent`` or ``NDT.NEve`` - NDTのイベント関係
 - ``NDT.Option`` - 設定
 - ``NDT.Info`` - NDTの情報
 # 設定できる項目
 - ``NDT.Option.DisCheck`` - Boolean(真偽値) - 有効にすると実行時型チェックを行わないようになります。軽量化に。
+- ``NDT.Option.DisNDTEvent`` - Boolean(真偽値) - 有効にするとNDTEventのイベント送信がなくなります。こちらも軽量化に。
 # 型チェックについて
 NDTは関数を実行するときに一部の引数の型を確認します。  
 型が間違っていた場合エラーを吐きます(処理は止めません)  
 無効にしたい場合は``NDT.Option.DisCheck``を有効にしてください。
+# NDTEventについて
+NDTはScratch独自のイベントに加えて色々追加のイベントがあります。  
+``NDT.NDTEvent.Add(name, handler)``でイベントを受け取れます。  
+無効にしたい場合は``NDT.Option.DisNDTEvent``を有効にしてください。  
+使い方の例とか無いんでここには一覧だけ置いときます。  
+- ``STEP_BEFORE`` - Stepの前に発火します
+- ``STEP_AFTER`` - Stepの後に発火します
 # サンプル
 1. ``NDT.Eve.Flag()`` - 緑の旗を押す
 2. ``NDT.Eve.Stop()`` - すべて停止
