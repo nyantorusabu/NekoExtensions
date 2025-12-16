@@ -112,14 +112,15 @@ NDT.SC.StartHats = NDT.RT.startHats;
 NDT.RT.startHats = function(HatOpc, Option, Target) {
     if (NDT.Option.DisNDTEvent) return NDT.SC.StartHats.call(this, HatOpc, Option, Target);
     const HatID = HatOpc.toUpperCase();
-    const SprID = Target?.id || NDT.RT.getTargetForStage().id;
+    const SprID = Target?.id || 'ALL';
     const Mes = (HatID == 'EVENT_WHENBROADCASTRECEIVED');
+    const Flag = (HatID == 'EVENT_WHENFLAGCLICKED');
     const Eve = NDT.NDTEvent.Dispatch;
     if (Mes) Eve('MESSAGE_BEFORE', {MesID: Option.BROADCAST_OPTION, SprID: SprID})
-    Eve(`HAT_BEFORE`, {HatID: HatID, Option: Option, SprID: SprID });
+    if (Flag) Eve('FLAG_BEFORE', {Option: Option, SprID: SprID})
     const Res = NDT.SC.StartHats.call(this, HatOpc, Option, Target);
     if (Mes) Eve('MESSAGE_AFTER', {MesID: Option.BROADCAST_OPTION, SprID: SprID})
-    Eve(`HAT_AFTER`, {HatID: HatID, Option: Option, SprID: SprID });
+    if (Flag) Eve('FLAG_AFTER', {Option: Option, SprID: SprID})
     return Res;
 }
 
