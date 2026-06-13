@@ -1,8 +1,3 @@
-// Name: NekoFrame
-// ID: NekoFrame
-// Description: Embed a page on the Stage
-// By: nyantorusabu
-
 (function (Scratch) {
   "use strict";
 
@@ -17,6 +12,8 @@
       this._mutationObserver = null;
       this._intersectionObserver = null;
       this.observersStarted = false;
+      this._rafId = null;
+      this._boundRAFLoop = this._rafLoop.bind(this);
     }
 
     getInfo() {
@@ -119,6 +116,28 @@
             },
           },
           {
+            opcode: "setLayer",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "[ID] のレイヤーを [LAYER] に設定",
+            arguments: {
+              ID: { type: Scratch.ArgumentType.STRING, defaultValue: "default" },
+              LAYER: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
+            },
+          },
+          {
+            opcode: "frameProperty",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "[ID] の [PROPERTY]",
+            arguments: {
+              ID: { type: Scratch.ArgumentType.STRING, defaultValue: "default" },
+              PROPERTY: {
+                type: Scratch.ArgumentType.STRING,
+                menu: "propertyMenu",
+                defaultValue: "X座標",
+              },
+            },
+          },
+          {
             opcode: "renameFrame",
             blockType: Scratch.BlockType.COMMAND,
             text: "フレーム [ID] を [NEW_ID] にリネーム",
@@ -167,6 +186,17 @@
               { text: "false", value: "false" },
             ],
           },
+          propertyMenu: {
+            acceptReporters: true,
+            items: [
+              { text: "X座標", value: "x" },
+              { text: "Y座標", value: "y" },
+              { text: "幅", value: "width" },
+              { text: "高さ", value: "height" },
+              { text: "インタラクト", value: "interactive" },
+              { text: "レイヤー", value: "layer" },
+            ],
+          },
         },
       };
     }
@@ -184,12 +214,13 @@
 
         const instance = {
           iframe,
-          x: 0,
-          y: 0,
-          width: -1,
-          height: -1,
+          xRatio: 0,
+          yRatio: 0,
+          widthRatio: -1,
+          heightRatio: -1,
           visible: true,
           interactive: true,
+          layer: 0,
         };
         this.frames.set(id, instance);
 
@@ -216,12 +247,13 @@
 
         const instance = {
           iframe,
-          x: 0,
-          y: 0,
-          width: -1,
-          height: -1,
+          xRatio: 0,
+          yRatio: 0,
+          widthRatio: -1,
+          heightRatio: -1,
           visible: true,
           interactive: true,
+          layer: 0,
         };
         this.frames.set(id, instance);
 
@@ -266,7 +298,8 @@
       const id = String(ID || "").trim();
       const instance = this.frames.get(id);
       if (instance) {
-        instance.x = Scratch.Cast.toNumber(X);
+        const num = Scratch.Cast.toNumber(X);
+        instance.xRatio = num / 240;
         this._updateFrames();
       }
     }
@@ -275,7 +308,8 @@
       const id = String(ID || "").trim();
       const instance = this.frames.get(id);
       if (instance) {
-        instance.y = Scratch.Cast.toNumber(Y);
+        const num = Scratch.Cast.toNumber(Y);
+        instance.yRatio = num / 180;
         this._updateFrames();
       }
     }
@@ -284,7 +318,12 @@
       const id = String(ID || "").trim();
       const instance = this.frames.get(id);
       if (instance) {
-        instance.width = Scratch.Cast.toNumber(WIDTH);
+        const num = Scratch.Cast.toNumber(WIDTH);
+        if (num < 0) {
+          instance.widthRatio = -1;
+        } else {
+          instance.widthRatio = num / 480;
+        }
         this._updateFrames();
       }
     }
@@ -293,7 +332,12 @@
       const id = String(ID || "").trim();
       const instance = this.frames.get(id);
       if (instance) {
-        instance.height = Scratch.Cast.toNumber(HEIGHT);
+        const num = Scratch.Cast.toNumber(HEIGHT);
+        if (num < 0) {
+          instance.heightRatio = -1;
+        } else {
+          instance.heightRatio = num / 360;
+        }
         this._updateFrames();
       }
     }
@@ -305,6 +349,48 @@
         instance.interactive = Scratch.Cast.toBoolean(INTERACTIVE);
         this._updateFrames();
       }
+    }
+
+    setLayer({ ID, LAYER }) {
+      const id = String(ID || "").trim();
+      const instance = this.frames.get(id);
+      if (instance) {
+        instance.layer = Scratch.Cast.toNumber(LAYER);
+        this._updateFrames();
+      }
+    }
+
+    frameProperty({ ID, PROPERTY }) {
+      const id = String(ID || "").trim();
+      const prop = String(PROPERTY || "x").toLowerCase();
+      const instance = this.frames.get(id);
+      if (!instance) {
+        if (prop === "interactive") return "false";
+        if (prop === "layer") return 0;
+        return 0;
+      }
+
+      if (prop === "x") {
+        return (instance.xRatio || 0) * 240;
+      }
+      if (prop === "y") {
+        return (instance.yRatio || 0) * 180;
+      }
+      if (prop === "width") {
+        const r = (instance.widthRatio != null && instance.widthRatio >= 0) ? instance.widthRatio : 1;
+        return r * 480;
+      }
+      if (prop === "height") {
+        const r = (instance.heightRatio != null && instance.heightRatio >= 0) ? instance.heightRatio : 1;
+        return r * 360;
+      }
+      if (prop === "interactive") {
+        return instance.interactive ? "true" : "false";
+      }
+      if (prop === "layer") {
+        return instance.layer || 0;
+      }
+      return 0;
     }
 
     renameFrame({ ID, NEW_ID }) {
@@ -462,21 +548,19 @@
         instance.iframe.style.display = "block";
         instance.iframe.style.visibility = "visible";
 
-        // width/height: if negative use the canvas size (default behavior)
-        let w = instance.width >= 0 ? instance.width : rect.width;
-        let h = instance.height >= 0 ? instance.height : rect.height;
+        let w = (instance.widthRatio != null && instance.widthRatio >= 0)
+          ? instance.widthRatio * rect.width
+          : rect.width;
+        let h = (instance.heightRatio != null && instance.heightRatio >= 0)
+          ? instance.heightRatio * rect.height
+          : rect.height;
 
-        // Compute position centered on the stage's center (Scratch coordinate system)
-        // CHANGED: center-based positioning so resizing remains centered
+        const x = (instance.xRatio || 0) * (rect.width / 2);
+        const y = (instance.yRatio || 0) * (rect.height / 2);
+
         const centerX = rect.left + window.scrollX + rect.width / 2;
         const centerY = rect.top + window.scrollY + rect.height / 2;
 
-        // instance.x is Scratch-style X (right positive), instance.y is Scratch-style Y (up positive)
-        // left/top position (top-left corner of iframe) should be:
-        //   left = centerX + x - width/2
-        //   top  = centerY - y - height/2
-        const x = Number(instance.x) || 0;
-        const y = Number(instance.y) || 0;
         const left = centerX + x - w / 2;
         const top = centerY - y - h / 2;
 
@@ -486,7 +570,8 @@
         instance.iframe.style.top = `${top}px`;
 
         instance.iframe.style.pointerEvents = instance.interactive ? "auto" : "none";
-        instance.iframe.style.zIndex = effectiveZ + 1;
+        const zIndex = effectiveZ + 1 + (instance.layer || 0);
+        instance.iframe.style.zIndex = zIndex;
       }
     }
 
@@ -576,9 +661,21 @@
       // Additional event listeners for scroll and resize
       window.addEventListener("resize", this._boundUpdateFrames);
       window.addEventListener("scroll", this._boundUpdateFrames);
+
+      // RAF loop to ensure continuous dynamic updates and maintain ratios
+      // even when canvas size changes due to fullscreen, internal rendering, or other cases
+      // not fully covered by observers alone.
+      this._startRAFLoop();
     }
 
     _stopObservers() {
+      if (this._rafId != null) {
+        try {
+          cancelAnimationFrame(this._rafId);
+        } catch (e) {}
+        this._rafId = null;
+      }
+
       if (this._resizeObserver) {
         try {
           this._resizeObserver.disconnect();
@@ -599,6 +696,20 @@
       }
       window.removeEventListener("resize", this._boundUpdateFrames);
       window.removeEventListener("scroll", this._boundUpdateFrames);
+    }
+
+    _startRAFLoop() {
+      if (this._rafId != null) return;
+      this._rafId = requestAnimationFrame(this._boundRAFLoop);
+    }
+
+    _rafLoop() {
+      if (this.frames.size > 0) {
+        this._updateFrames();
+        this._rafId = requestAnimationFrame(this._boundRAFLoop);
+      } else {
+        this._rafId = null;
+      }
     }
 
     async _canEmbed(url) {
